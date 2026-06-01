@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Court Crowd v5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Barlow+Condensed:wght@300;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080a0d; --surf:#0e1117; --brd:#1e2530;
+  --txt:#e8edf5; --mut:#4a5568;
+  --acc:#c8f53a; --warm:#f5a623; --hot:#ff4455;
+  --cool:#38b2e8; --ok:#4ade80; --warn:#fbbf24;
+  --fd:'Bebas Neue',sans-serif;
+  --fu:'Barlow Condensed',sans-serif;
+  --fm:'DM Mono',monospace;
+  --r:4px; --circ:502;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
+  font-family:var(--fu);overflow:hidden;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  transition:opacity 350ms ease,transform 350ms ease}
+.screen.hidden{opacity:0;pointer-events:none;transform:scale(.97)}
+.hidden{display:none!important}
+
+/* ── INTRO ── */
+#si{background:var(--bg);gap:16px;padding:20px}
+.logo .c1{font-family:var(--fd);font-size:clamp(44px,13vw,90px);color:var(--txt);
+  letter-spacing:.04em;display:block;line-height:.9}
+.logo .c2{font-family:var(--fd);font-size:clamp(44px,13vw,90px);color:var(--acc);
+  letter-spacing:.04em;display:block;line-height:.9;text-shadow:0 0 36px rgba(200,245,58,.28)}
+.logo .c3{font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--mut);margin-top:4px;display:block}
+.slbl{font-size:9px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--mut);width:100%;max-width:360px;margin-bottom:5px}
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:100%;max-width:360px}
+.abtn{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);
+  padding:9px 5px;cursor:pointer;text-align:center;-webkit-user-select:none;user-select:none}
+.abtn:active{transform:scale(.97)}
+.abtn.sel{border-color:var(--acc);background:rgba(200,245,58,.06)}
+.abtn .af{font-size:20px;display:block;margin-bottom:2px}
+.abtn .an{font-family:var(--fd);font-size:16px;color:var(--txt);display:block}
+.abtn .ad{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);display:block;margin-top:1px}
+.trow{display:flex;align-items:center;justify-content:space-between;
+  width:100%;max-width:360px;background:var(--surf);border:1px solid var(--brd);
+  border-radius:var(--r);padding:8px 12px}
+.tlbl{font-size:13px;color:var(--txt)}
+.tgl{position:relative;width:40px;height:20px;cursor:pointer;flex-shrink:0}
+.tgl input{opacity:0;width:0;height:0}
+.tsl{position:absolute;inset:0;background:var(--brd);border-radius:10px;transition:background .2s}
+.tsl::before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;
+  background:var(--mut);border-radius:50%;transition:transform .2s,background .2s}
+.tgl input:checked+.tsl{background:rgba(200,245,58,.22)}
+.tgl input:checked+.tsl::before{transform:translateX(20px);background:var(--acc)}
+.sbtn{background:var(--acc);color:#0a0a0a;border:none;border-radius:var(--r);
+  font-family:var(--fd);font-size:22px;letter-spacing:.12em;padding:11px 0;cursor:pointer;
+  width:100%;max-width:360px;box-shadow:0 0 24px rgba(200,245,58,.18)}
+.sbtn:active{transform:scale(.97)}
+.lbtn{background:transparent;border:none;color:var(--mut);font-family:var(--fm);
+  font-size:11px;cursor:pointer;padding:4px;letter-spacing:.1em}
+
+/* ── CAL ── */
+#sc{background:var(--bg);gap:12px;padding:20px;text-align:center}
+.ct{font-family:var(--fd);font-size:30px;letter-spacing:.08em;color:var(--acc)}
+.cp{font-family:var(--fd);font-size:22px;letter-spacing:.05em;color:var(--txt)}
+.cd{font-size:11px;color:var(--mut);max-width:270px;line-height:1.5}
+.cpr{width:100%;max-width:280px;height:3px;background:var(--brd);border-radius:2px;overflow:hidden}
+.cb{height:100%;background:var(--acc);width:0%;transition:width 100ms linear}
+.cmb{height:5px;background:var(--brd);border-radius:2px;overflow:hidden;width:100%;max-width:280px;margin-top:3px}
+.cmf{height:100%;background:var(--acc);width:0%;transition:width 50ms linear}
+.cst{font-family:var(--fm);font-size:10px;color:var(--mut)}
+.bsec{background:transparent;border:1px solid var(--brd);border-radius:var(--r);
+  color:var(--mut);font-family:var(--fu);font-size:11px;letter-spacing:.1em;padding:7px 18px;cursor:pointer}
+.bpri{background:var(--acc);color:#0a0a0a;border:none;border-radius:var(--r);
+  font-family:var(--fd);font-size:18px;letter-spacing:.1em;padding:7px 26px;cursor:pointer}
+
+/* ── SCORE SETUP ── */
+#ssu{background:var(--bg);gap:12px;padding:20px}
+.sst{font-family:var(--fd);font-size:28px;letter-spacing:.08em;color:var(--acc)}
+.pins{display:flex;flex-direction:column;gap:7px;width:100%;max-width:290px}
+.prow{display:flex;align-items:center;gap:9px}
+.pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pdot.p1{background:var(--acc)}.pdot.p2{background:var(--cool)}
+.pinp{flex:1;background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);
+  color:var(--txt);font-family:var(--fu);font-size:14px;padding:6px 9px;outline:none}
+.pinp:focus{border-color:var(--acc)}
+.brow{display:flex;gap:7px;width:100%;max-width:290px}
+
+/* ── PERM ── */
+#sp{background:var(--bg);gap:12px;padding:20px;text-align:center}
+#sp h2{font-family:var(--fd);font-size:26px;letter-spacing:.05em}
+#sp p{font-size:11px;color:var(--mut);max-width:270px;line-height:1.6}
+.perr{font-family:var(--fm);font-size:10px;color:var(--hot);
+  background:rgba(255,68,85,.08);border:1px solid rgba(255,68,85,.2);
+  border-radius:var(--r);padding:7px 11px;max-width:290px;word-break:break-all}
+
+/* ── DIAG ── */
+#sd{background:var(--bg);padding:20px;gap:0;justify-content:flex-start;overflow-y:auto}
+.dtit{font-family:var(--fd);font-size:22px;letter-spacing:.08em;
+  color:var(--acc);margin-bottom:10px;padding-top:18px;flex-shrink:0}
+.dlog{width:100%;max-width:420px;background:var(--surf);border:1px solid var(--brd);
+  border-radius:var(--r);padding:7px;font-family:var(--fm);font-size:9px;
+  height:120px;overflow-y:auto;margin-bottom:10px;flex-shrink:0}
+.dle{padding:2px 0;border-bottom:1px solid rgba(30,37,48,.4);display:flex;gap:7px}
+.dlt{color:var(--brd);flex-shrink:0}
+.dlm{color:var(--mut)}.dlm.ok{color:var(--ok)}.dlm.warn{color:var(--warn)}.dlm.err{color:var(--hot)}
+.dsec{width:100%;max-width:420px;margin-bottom:10px}
+.dsect{font-size:8px;letter-spacing:.24em;text-transform:uppercase;color:var(--mut);
+  margin-bottom:5px;padding-bottom:2px;border-bottom:1px solid var(--brd)}
+.dr{display:flex;align-items:center;justify-content:space-between;
+  padding:3px 0;border-bottom:1px solid rgba(30,37,48,.4)}
+.dk{font-family:var(--fm);font-size:9px;color:var(--mut)}
+.dv{font-family:var(--fm);font-size:9px;color:var(--txt);text-align:right;max-width:60%}
+.dv.ok{color:var(--ok)}.dv.warn{color:var(--warn)}.dv.err{color:var(--hot)}
+.dmb{height:5px;background:var(--brd);border-radius:2px;overflow:hidden;margin-top:3px}
+.dmf{height:100%;background:var(--acc);width:0%;transition:width 50ms linear}
+.dbtns{display:flex;flex-wrap:wrap;gap:5px;width:100%;max-width:420px;margin-bottom:10px}
+.db{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);
+  color:var(--txt);font-family:var(--fm);font-size:9px;letter-spacing:.08em;
+  padding:5px 9px;cursor:pointer;flex:1;min-width:80px;text-align:center}
+.db.p{border-color:var(--acc);color:var(--acc)}
+.db.x{border-color:var(--hot);color:var(--hot)}
+
+/* ── MAIN ── */
+#sm{justify-content:space-between;padding:0;background:var(--bg)}
+
+/* Score bar */
+.sbar{width:100%;background:var(--surf);border-bottom:1px solid var(--brd);
+  flex-shrink:0;display:none;padding:3px 14px;align-items:center;justify-content:space-between}
+.sbar.vis{display:flex}
+.spl{display:flex;align-items:center;gap:5px;flex:1}
+.spl.r{flex-direction:row-reverse}
+.snm{font-family:var(--fd);font-size:14px;letter-spacing:.04em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px}
+.ssets{display:flex;gap:2px}
+.sset{font-family:var(--fm);font-size:9px;color:var(--mut);min-width:13px;text-align:center}
+.sset.won{color:var(--txt);font-weight:bold}
+.sgm{font-family:var(--fd);font-size:24px;line-height:1;min-width:18px;text-align:center}
+.spts{font-family:var(--fd);font-size:17px;line-height:1;
+  min-width:24px;text-align:center;color:var(--acc)}
+.sdot{width:5px;height:5px;border-radius:50%;background:var(--acc);margin-top:1px;opacity:0}
+.sdot.srv{opacity:1}
+.sdiv{font-family:var(--fm);font-size:8px;color:var(--brd);
+  letter-spacing:.08em;padding:0 5px;white-space:nowrap;text-align:center}
+
+/* Topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;
+  padding:7px 14px;width:100%;border-bottom:1px solid var(--brd);flex-shrink:0}
+.ttit{font-family:var(--fd);font-size:18px;letter-spacing:.1em}
+.tamb{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+.tbtns{display:flex;gap:4px}
+.tb{background:transparent;border:1px solid var(--brd);border-radius:var(--r);
+  color:var(--mut);font-family:var(--fu);font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;padding:3px 7px;cursor:pointer}
+.tb:hover{border-color:var(--acc);color:var(--acc)}
+.tb.x:hover{border-color:var(--hot);color:var(--hot)}
+
+/* Stage */
+.stage{flex:1;width:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;position:relative;overflow:hidden}
+.glow{position:absolute;inset:0;pointer-events:none;transition:background 600ms ease}
+#cc{width:100%;height:100%;position:absolute;inset:0}
+.pw{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.pt{position:absolute;border-radius:50%;animation:pR linear forwards;opacity:0}
+@keyframes pR{0%{opacity:.8;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-100px) scale(.3)}}
+/* Umpire overlay */
+.uov{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:20;
+  font-family:var(--fd);font-size:clamp(11px,3.2vw,18px);letter-spacing:.07em;
+  color:var(--txt);background:rgba(14,17,23,.9);border:1px solid var(--brd);
+  border-radius:var(--r);padding:4px 13px;white-space:nowrap;
+  pointer-events:none;opacity:0;transition:opacity 300ms ease;
+  max-width:92vw;overflow:hidden;text-overflow:ellipsis;text-align:center}
+.uov.vis{opacity:1}
+/* Ring */
+.rw{position:relative;z-index:2;margin-bottom:6px}
+#ir{width:clamp(88px,22vw,140px);height:clamp(88px,22vw,140px);transform:rotate(-90deg)}
+.rtr{fill:none;stroke:var(--brd);stroke-width:6}
+.rfi{fill:none;stroke:var(--acc);stroke-width:6;stroke-linecap:round;
+  stroke-dasharray:502;stroke-dashoffset:502;
+  transition:stroke-dashoffset 200ms ease,stroke 300ms ease;
+  filter:drop-shadow(0 0 4px var(--acc))}
+.rc{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;pointer-events:none}
+.rpct{font-family:var(--fd);font-size:clamp(20px,6vw,38px);line-height:1;transition:color 300ms}
+.runt{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+/* State */
+.stdisp{position:relative;z-index:2;text-align:center;pointer-events:none}
+.stlbl{font-family:var(--fd);font-size:clamp(34px,10vw,70px);
+  letter-spacing:.05em;line-height:1;display:block;transition:color 300ms}
+.stsub{font-size:9px;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--mut);display:block;margin-top:3px}
+/* Score buttons */
+.sbtns{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
+  z-index:10;display:none;gap:7px;align-items:center}
+.sbtns.vis{display:flex}
+.sptb{border:none;border-radius:var(--r);font-family:var(--fd);font-size:12px;
+  letter-spacing:.05em;padding:8px 14px;cursor:pointer;min-width:94px}
+.sptb:active{transform:scale(.96)}
+.sptb.p1{background:rgba(200,245,58,.13);border:1px solid var(--acc);color:var(--acc)}
+.sptb.p2{background:rgba(56,178,232,.13);border:1px solid var(--cool);color:var(--cool)}
+.rbtn{background:rgba(245,166,35,.1);border:1px solid var(--warm);border-radius:var(--r);
+  color:var(--warm);font-family:var(--fm);font-size:9px;letter-spacing:.08em;
+  padding:6px 9px;cursor:pointer}
+.rbtn:active{transform:scale(.95)}
+.rsolobtn{position:absolute;bottom:6px;right:10px;z-index:10}
+.ubtndiv{position:absolute;bottom:6px;left:10px;z-index:10}
+
+/* Meters */
+.mrow{display:flex;gap:5px;padding:6px 12px;width:100%;
+  flex-shrink:0;border-top:1px solid var(--brd)}
+.mtr{flex:1;display:flex;flex-direction:column;gap:3px}
+.ml{font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.mb{height:2px;background:var(--brd);border-radius:1px;overflow:hidden}
+.mf{height:100%;border-radius:1px;width:0%;transition:width 80ms linear}
+.mv{font-family:var(--fm);font-size:8px;color:var(--mut)}
+
+/* Log */
+.elog{width:100%;height:44px;padding:3px 12px;overflow:hidden;
+  flex-shrink:0;display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--brd)}
+.le{font-family:var(--fm);font-size:9px;display:flex;gap:10px;animation:fi 200ms ease}
+.le .lt{color:var(--brd);flex-shrink:0}
+.le .lev{color:var(--acc);flex-shrink:0}
+.le .ld{color:var(--mut)}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){*,.pt{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="si" class="screen">
+  <div class="logo"><span class="c1">COURT</span><span class="c2">CROWD</span><span class="c3">Tennis Atmosphere Simulator v5</span></div>
+  <div style="width:100%;max-width:360px">
+    <p class="slbl">Ambiance</p>
+    <div class="agrid">
+      <button class="abtn sel" data-amb="roland" aria-pressed="true"><span class="af">🇫🇷</span><span class="an">Roland Garros</span><span class="ad">Passionné · Chaud</span></button>
+      <button class="abtn" data-amb="wimbledon" aria-pressed="false"><span class="af">🇬🇧</span><span class="an">Wimbledon</span><span class="ad">Retenu · Poli</span></button>
+      <button class="abtn" data-amb="usopen" aria-pressed="false"><span class="af">🇺🇸</span><span class="an">US Open</span><span class="ad">Vocal · Festif</span></button>
+      <button class="abtn" data-amb="mix" aria-pressed="false"><span class="af">🌍</span><span class="an">Grand Chelem</span><span class="ad">Mix · Dynamique</span></button>
+    </div>
+  </div>
+  <div style="width:100%;max-width:360px">
+    <p class="slbl">Score</p>
+    <div class="trow"><span class="tlbl">Suivi du score (manuel)</span>
+      <label class="tgl" aria-label="Activer le suivi du score">
+        <input type="checkbox" id="stoggle"><span class="tsl"></span>
+      </label>
+    </div>
+  </div>
+  <button class="sbtn" id="bstart">LANCER LE MATCH</button>
+  <button class="lbtn" id="bdiag">🔧 diagnostic</button>
+</div>
+
+<!-- CALIBRATION -->
+<div id="sc" class="screen hidden">
+  <p class="ct">CALIBRATION</p>
+  <p class="cp" id="cph">SILENCE</p>
+  <p class="cd" id="cdc">Silence complet — 3 secondes immobile</p>
+  <div class="cpr"><div class="cb" id="cbar"></div></div>
+  <div style="width:100%;max-width:280px">
+    <div style="display:flex;justify-content:space-between">
+      <span class="dk">Niveau micro</span><span class="dv" id="crmsv">–</span>
+    </div>
+    <div class="cmb"><div class="cmf" id="cmic"></div></div>
+  </div>
+  <p class="cst" id="cstat">En attente…</p>
+  <div style="display:flex;gap:8px">
+    <button class="bsec" id="bcskip">Ignorer</button>
+    <button class="bpri hidden" id="bcdone">Démarrer →</button>
+  </div>
+</div>
+
+<!-- SCORE SETUP -->
+<div id="ssu" class="screen hidden">
+  <p class="sst">JOUEURS</p>
+  <div class="pins">
+    <div class="prow"><div class="pdot p1"></div><input class="pinp" id="p1n" type="text" placeholder="Joueur 1" maxlength="16" autocomplete="off"></div>
+    <div class="prow"><div class="pdot p2"></div><input class="pinp" id="p2n" type="text" placeholder="Joueur 2" maxlength="16" autocomplete="off"></div>
+  </div>
+  <div class="brow">
+    <button class="bsec" id="bssk" style="flex:1">J1 / J2</button>
+    <button class="bpri" id="bsok" style="flex:1;font-size:16px">OK →</button>
+  </div>
+</div>
+
+<!-- PERM -->
+<div id="sp" class="screen hidden">
+  <div style="font-size:42px">🎙️</div>
+  <h2>Micro inaccessible</h2>
+  <p>Erreur :</p>
+  <div class="perr" id="perr">–</div>
+  <p>Paramètres → Confidentialité → Microphone</p>
+  <button class="bsec" id="bretry">← Retour</button>
+</div>
+
+<!-- DIAG -->
+<div id="sd" class="screen hidden">
+  <p class="dtit">DIAGNOSTIC</p>
+  <div class="dlog" id="dlog"></div>
+  <div class="dsec">
+    <p class="dsect">Environnement</p>
+    <div class="dr"><span class="dk">AudioContext</span><span class="dv" id="dac">–</span></div>
+    <div class="dr"><span class="dk">getUserMedia</span><span class="dv" id="dgum">–</span></div>
+    <div class="dr"><span class="dk">SpeechSynthesis</span><span class="dv" id="dtts">–</span></div>
+    <div class="dr"><span class="dk">Secure context</span><span class="dv" id="dsec2">–</span></div>
+    <div class="dr"><span class="dk">Voix</span><span class="dv" id="dvoice">–</span></div>
+    <div class="dr"><span class="dk">Sons chargés</span><span class="dv" id="dsounds">–</span></div>
+  </div>
+  <div class="dsec">
+    <p class="dsect">Signal micro</p>
+    <div style="display:flex;justify-content:space-between"><span class="dk">RMS</span><span class="dv" id="drms">–</span></div>
+    <div class="dmb"><div class="dmf" id="dmbar"></div></div>
+    <div class="dr" style="margin-top:3px"><span class="dk">Baseline</span><span class="dv" id="dbase">–</span></div>
+    <div class="dr"><span class="dk">Frames actives</span><span class="dv" id="dfr">0</span></div>
+  </div>
+  <div class="dbtns">
+    <button class="db p" id="dbmic">🎙 Micro</button>
+    <button class="db p" id="dbaudio">🔊 Audio</button>
+    <button class="db p" id="dbtts">🗣 Voix</button>
+    <button class="db" id="dbback">← Retour</button>
+    <button class="db x" id="dblaunch">▶ Lancer</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="sm" class="screen hidden">
+
+  <!-- Score bar -->
+  <div class="sbar" id="sbar">
+    <div class="spl" id="sp1ui">
+      <div class="sdot srv" id="sd1"></div>
+      <span class="snm" id="sn1">J1</span>
+      <div class="ssets" id="ss1"></div>
+      <span class="sgm" id="sg1">0</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+      <div style="display:flex;gap:3px;align-items:center">
+        <span class="spts" id="sp1p">0</span>
+        <span class="sdiv">–</span>
+        <span class="spts" id="sp2p">0</span>
+      </div>
+      <span style="font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--brd)" id="ssetlbl">SET 1</span>
+    </div>
+    <div class="spl r" id="sp2ui">
+      <div class="sdot" id="sd2"></div>
+      <span class="snm" id="sn2">J2</span>
+      <div class="ssets" id="ss2"></div>
+      <span class="sgm" id="sg2">0</span>
+    </div>
+  </div>
+
+  <div class="topbar">
+    <span class="ttit">COURT CROWD</span>
+    <span class="tamb" id="tamb">Roland Garros</span>
+    <div class="tbtns">
+      <button class="tb" id="btodiag">🔧</button>
+      <button class="tb x" id="bstop">■ STOP</button>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="cc"></canvas>
+    <div class="glow" id="glow"></div>
+    <div class="pw" id="pw"></div>
+    <div class="uov" id="uov"></div>
+
+    <div class="rw">
+      <svg id="ir" viewBox="0 0 180 180" aria-hidden="true">
+        <circle class="rtr" cx="90" cy="90" r="80"/>
+        <circle class="rfi" id="rfi" cx="90" cy="90" r="80"/>
+      </svg>
+      <div class="rc"><span class="rpct" id="rpct">0</span><span class="runt">intensité</span></div>
+    </div>
+
+    <div class="stdisp">
+      <span class="stlbl" id="stlbl">EN ATTENTE</span>
+      <span class="stsub" id="stsub">Écoute en cours…</span>
+    </div>
+
+    <!-- Score point buttons -->
+    <div class="sbtns" id="sbtns">
+      <button class="sptb p1" id="bp1">Point J1</button>
+      <button class="rbtn" id="brs">🎲</button>
+      <button class="sptb p2" id="bp2">Point J2</button>
+    </div>
+
+    <!-- No-score random + umpire buttons -->
+    <div class="rsolobtn" id="rsolobtn">
+      <button class="rbtn" id="brsa">🎲 Réaction</button>
+    </div>
+    <div class="ubtndiv">
+      <button class="rbtn" id="bru" style="background:rgba(56,178,232,.1);border-color:var(--cool);color:var(--cool)">🗣 Arbitre</button>
+    </div>
+  </div>
+
+  <div class="mrow">
+    <div class="mtr"><span class="ml">Volume</span><div class="mb"><div class="mf" id="mvol" style="background:var(--cool)"></div></div><span class="mv" id="mvv">–∞</span></div>
+    <div class="mtr"><span class="ml">Centroïde</span><div class="mb"><div class="mf" id="mcent" style="background:var(--warm)"></div></div><span class="mv" id="mcentv">0Hz</span></div>
+    <div class="mtr"><span class="ml">Rallye</span><div class="mb"><div class="mf" id="mrally" style="background:var(--acc)"></div></div><span class="mv" id="mrallyv">0</span></div>
+    <div class="mtr"><span class="ml">RAW</span><div class="mb"><div class="mf" id="mraw" style="background:var(--hot)"></div></div><span class="mv" id="mrawv">0.000</span></div>
+  </div>
+
+  <div class="elog" id="elog" aria-live="polite"></div>
+</div>
+
+<script>
+'use strict';
+/* ══════════════════════════════════════════════════════════════════════
+   COURT CROWD v5
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── CONFIG ─────────────────────────────────────────────────────────── */
+const CFG = {
+  ANALYSIS_MS:40, FFT:2048,
+  BL_FRAMES:120, SILENCE_GATE:.0022,
+  // Leisure tennis IOI range (ms) — wider than ATP
+  IOI_MIN:400, IOI_MAX:2800,
+  ONSET_FACTOR:3.6, ONSET_DELTA_MIN:.013, REFRACT_MS:100,
+  CENTROID_HIT:1000, CENTROID_NET:550,
+  ZCR_HIT_MIN:.08, ZCR_HIT_MAX:.44,
+  ZCR_V_MIN:.04, ZCR_V_MAX:.26,
+  NET_WIN_MS:500, VOICE_DUR_MIN:220,
+  // Leisure: longer silence before point ends
+  RALLY_RESET_MS:2800,
+  NOISE_WARN_FRAMES:160,
+  UMPIRE_MIN_GAP:7000,
+  // Sound max duration (ms) — crowd reactions capped
+  SOUND_MAX_MS:4500,
+  CAL_BL:0, CALIBRATED:false,
+  SCORE_ON:false,
+  CIRC:2*Math.PI*80,
+};
+
+/* ── AMBIANCES ──────────────────────────────────────────────────────── */
+const AMB = {
+  roland:   {label:'Roland Garros',energy:.82,delay:420,lang:'fr-FR',
+    quiet:"S'il vous plaît.",game:'Jeu',fault:'Faute.',let_:'Filet.',
+    out:'Dehors.',time_:"Le temps est écoulé.",newballs:'Nouvelles balles.',
+    warn_r:"Avertissement, abus de raquette.",warn_c:"Avertissement, conduite antisportive.",
+    tts:{rate:.82,pitch:.88}},
+  wimbledon:{label:'Wimbledon',energy:.52,delay:680,lang:'en-GB',
+    quiet:'Quiet please.',game:'Game',fault:'Fault.',let_:'Let.',
+    out:'Out.',time_:'Time.',newballs:'New balls please.',
+    warn_r:'Warning, racket abuse.',warn_c:'Warning, unsportsmanlike conduct.',
+    tts:{rate:.85,pitch:.85}},
+  usopen:   {label:'US Open',energy:1.0,delay:200,lang:'en-US',
+    quiet:'Quiet please.',game:'Game',fault:'Fault.',let_:'Let.',
+    out:'Out.',time_:'Time.',newballs:'New balls please.',
+    warn_r:'Warning, racket abuse.',warn_c:'Warning, unsportsmanlike conduct.',
+    tts:{rate:.9,pitch:.92}},
+  mix:      {label:'Grand Chelem',energy:.87,delay:320,lang:'fr-FR',
+    quiet:"S'il vous plaît.",game:'Jeu',fault:'Faute.',let_:'Filet.',
+    out:'Dehors.',time_:"Le temps est écoulé.",newballs:'Nouvelles balles.',
+    warn_r:"Avertissement, abus de raquette.",warn_c:"Avertissement, conduite antisportive.",
+    tts:{rate:.82,pitch:.88}},
+};
+
+const STATES = {
+  silence:{label:'SILENCE',   sub:'Foule en attente',        color:'#4a5568',ring:'#4a5568'},
+  murmur: {label:'MURMURE',   sub:'Échange en cours…',       color:'#38b2e8',ring:'#38b2e8'},
+  rally:  {label:'RALLYE',    sub:'La foule suit…',          color:'#f5a623',ring:'#f5a623'},
+  tension:{label:'TENSION',   sub:'Rallye intense !',        color:'#f5a623',ring:'#ff8c00'},
+  react:  {label:'RÉACTION !',sub:'Point terminé !',         color:'#ff4455',ring:'#ff4455'},
+  ovation:{label:'OVATION',   sub:'Public en délire !',      color:'#c8f53a',ring:'#c8f53a'},
+};
+
+/* ── SOUND URLS ─────────────────────────────────────────────────────── */
+const SURLS = {
+  ovation_epic:   'https://cdn.freesound.org/previews/481/481782_8432823-lq.mp3',
+  ovation_strong: 'https://cdn.freesound.org/previews/481/481776_8432823-lq.mp3',
+  ovation_medium: 'https://cdn.freesound.org/previews/397/397434_4019029-lq.mp3',
+  ovation_soft:   'https://cdn.freesound.org/previews/397/397435_4019029-lq.mp3',
+  appl_med:       'https://cdn.freesound.org/previews/481/481778_8432823-lq.mp3',
+  appl_soft:      'https://cdn.freesound.org/previews/481/481779_8432823-lq.mp3',
+  appl_cheer:     'https://cdn.freesound.org/previews/365/365132_3279490-lq.mp3',
+  amb_quiet:      'https://cdn.freesound.org/previews/481/481774_8432823-lq.mp3',
+  amb_light:      'https://cdn.freesound.org/previews/481/481775_8432823-lq.mp3',
+  amb_chat:       'https://cdn.freesound.org/previews/481/481777_8432823-lq.mp3',
+  sigh_sad:       'https://cdn.freesound.org/previews/619/619007_781461-lq.mp3',
+  sigh_decay:     'https://cdn.freesound.org/previews/481/481780_8432823-lq.mp3',
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   SCORE ENGINE — Roland-Garros rules, best-of-3
+   No super-tiebreak: 3rd set played with advantage (no tie-break)
+   ══════════════════════════════════════════════════════════════════════ */
+const Score = (() => {
+  // Points encoding: 0,1,2,3 = 0/15/30/40, 4+ = deuce zone
+  const PL = ['0','15','30','40'];
+  let G = {
+    p1:'J1', p2:'J2',
+    serving: 1,          // 1 or 2 — who serves
+    firstServer: 1,      // who served first in the match
+    pts: [0, 0],         // raw point counters this game
+    games: [0, 0],       // games this set
+    sets: [],            // [{g1,g2}] completed sets
+    set: 1,              // current set number (1-3)
+    inTB: false,         // tie-break in progress
+    tbPts: [0, 0],       // tie-break points
+    matchOver: false,
+    winner: null,
+    totalGamesPlayed: 0, // for newballs trigger (every 9 games in RG)
+  };
+
+  function reset(n1, n2) {
+    G = { p1:n1||'J1', p2:n2||'J2', serving:1, firstServer:1,
+          pts:[0,0], games:[0,0], sets:[], set:1,
+          inTB:false, tbPts:[0,0], matchOver:false, winner:null, totalGamesPlayed:0 };
+  }
+
+  // Returns event object describing what happened
+  function addPoint(player) {
+    if (G.matchOver) return null;
+    const wi = player - 1; // winner index 0/1
+    const li = 1 - wi;
+    const ev = { player, gameWon:false, setWon:false, matchWon:false,
+                 scoreStr:'', gameScoreStr:'', deuce:false, advantage:false,
+                 setScoreStr:'', newballs:false };
+
+    if (G.inTB) {
+      G.tbPts[wi]++;
+      const [a,b] = G.tbPts;
+      // Change serve every 2 points in TB (first point, then every 2)
+      const total = a + b;
+      if (total > 0 && total % 2 === 1) _swapServe();
+      if ((a >= 7 || b >= 7) && Math.abs(a - b) >= 2) {
+        // TB won
+        G.games[wi]++;
+        G.totalGamesPlayed++;
+        ev.gameWon = true;
+        ev.scoreStr = `${a}–${b}`;
+        G.inTB = false; G.tbPts = [0,0];
+        _endSet(player, ev);
+        return ev;
+      }
+      ev.scoreStr = `${a}–${b}`;
+      ev.gameScoreStr = `${G.games[0]}–${G.games[1]}`;
+      return ev;
+    }
+
+    // Normal point scoring
+    G.pts[wi]++;
+    const [pa, pb] = G.pts;
+
+    // Deuce/advantage zone: both >= 3 (i.e. both have at least 40)
+    if (pa >= 3 && pb >= 3) {
+      if (pa === pb) {
+        // Deuce — reset to deuce (3-3)
+        G.pts = [3, 3];
+        ev.deuce = true;
+        ev.scoreStr = 'Égalité';
+        ev.gameScoreStr = `${G.games[0]}–${G.games[1]}`;
+        return ev;
+      }
+      if (pa - pb >= 2) {
+        // Player 1 wins game from advantage
+        return _winGame(1, ev);
+      }
+      if (pb - pa >= 2) {
+        // Player 2 wins game from advantage
+        return _winGame(2, ev);
+      }
+      // One ahead = advantage
+      ev.advantage = true;
+      ev.scoreStr = pa > pb ? `Avantage ${G.p1}` : `Avantage ${G.p2}`;
+      ev.gameScoreStr = `${G.games[0]}–${G.games[1]}`;
+      return ev;
+    }
+
+    // Normal point before deuce
+    if (pa >= 4) return _winGame(1, ev);
+    if (pb >= 4) return _winGame(2, ev);
+
+    // Just a normal point
+    ev.scoreStr = `${PL[pa]}–${PL[pb]}`;
+    ev.gameScoreStr = `${G.games[0]}–${G.games[1]}`;
+    return ev;
+  }
+
+  function _winGame(player, ev) {
+    const wi = player - 1;
+    G.games[wi]++;
+    G.pts = [0, 0];
+    G.totalGamesPlayed++;
+    ev.gameWon = true;
+    ev.scoreStr = `${G.games[0]}–${G.games[1]}`;
+    // Serve changes after each game
+    _swapServe();
+    // Check for new balls (Roland-Garros: every 9 games, then every 11)
+    // Simplified: every 9 total games
+    if (G.totalGamesPlayed % 9 === 0) ev.newballs = true;
+    _checkSetEnd(player, ev);
+    return ev;
+  }
+
+  function _checkSetEnd(player, ev) {
+    const wi = player - 1;
+    const [ga, gb] = G.games;
+    const lead = G.games[wi], trail = G.games[1 - wi];
+    const isLastSet = G.set === 3; // 3rd set in best-of-3
+
+    // Check for tie-break at 6-6 (only in sets 1 and 2 for RG)
+    if (ga === 6 && gb === 6 && !isLastSet) {
+      G.inTB = true; G.tbPts = [0, 0];
+      // In tie-break, server stays same; opponent will serve first point
+      ev.scoreStr = '6–6 · Jeu décisif';
+      return;
+    }
+
+    // Set won conditions:
+    // - reach 6 with 2+ game lead
+    // - 7–5 (reached 5-5 then one player got to 7)
+    // - after TB: 7–6
+    const setWon = (lead >= 6 && lead - trail >= 2 && !(ga === 6 && gb === 6)) ||
+                   (lead === 7 && (trail === 5 || trail === 6));
+
+    if (setWon) {
+      G.sets.push({ g1: G.games[0], g2: G.games[1] });
+      const setsWon = G.sets.filter(s => (player===1 ? s.g1 : s.g2) > (player===1 ? s.g2 : s.g1)).length;
+      ev.setWon = true;
+      ev.setScoreStr = `${G.games[0]}–${G.games[1]}`;
+      G.games = [0, 0];
+      G.set++;
+      // After set, server is the one who didn't serve the last game
+      // (already swapped after game win — correct)
+      if (setsWon >= 2) { // win 2 sets in best-of-3
+        G.matchOver = true; G.winner = player; ev.matchWon = true;
+      }
+    }
+  }
+
+  function _endSet(player, ev) { _checkSetEnd(player, ev); }
+
+  function _swapServe() { G.serving = G.serving === 1 ? 2 : 1; }
+
+  function getDS() {
+    if (G.inTB) return { p1: String(G.tbPts[0]), p2: String(G.tbPts[1]), tb: true };
+    const [pa, pb] = G.pts;
+    if (pa >= 3 && pb >= 3) {
+      if (pa === pb) return { p1:'Éga', p2:'Éga', tb:false };
+      return pa > pb
+        ? { p1:'Av', p2:'', tb:false }
+        : { p1:'', p2:'Av', tb:false };
+    }
+    return { p1: PL[pa]||'0', p2: PL[pb]||'0', tb:false };
+  }
+
+  return { reset, addPoint, getState:()=>G, getDS };
+})();
+
+/* ══════════════════════════════════════════════════════════════════════
+   UMPIRE — TTS with ducking
+   ══════════════════════════════════════════════════════════════════════ */
+const Umpire = (() => {
+  const synth = (typeof speechSynthesis !== 'undefined') ? speechSynthesis : null;
+  let vmap = {}, camb = 'roland', lastT = 0, speaking = false, nfr = 0, Q = [];
+
+  function _bv(lang) {
+    if (!synth) return null;
+    const vv = synth.getVoices(), l2 = lang.split('-')[0];
+    const sc = v => {
+      const nm = v.name.toLowerCase();
+      return (v.lang===lang?4:v.lang.startsWith(l2)?1:0) +
+             (nm.includes('natural')||nm.includes('neural')||nm.includes('online')?2:0);
+    };
+    const cc = vv.filter(v=>v.lang===lang||v.lang.startsWith(l2));
+    return cc.length ? cc.sort((a,b)=>sc(b)-sc(a))[0] : null;
+  }
+
+  function _lv() {
+    if (!synth) return;
+    ['fr-FR','fr-BE','en-GB','en-US'].forEach(l=>{ vmap[l]=_bv(l); });
+    const v = vmap[AMB[camb].lang];
+    D.set('dvoice', v?.name||'défaut', v?'ok':'warn');
+  }
+  if (synth && typeof synth.onvoiceschanged !== 'undefined') synth.onvoiceschanged = _lv;
+  setTimeout(_lv, 300); setTimeout(_lv, 1200); setTimeout(_lv, 3500);
+
+  function _speak(text, force=false) {
+    if (!synth) return;
+    const now = Date.now();
+    if (!force && now - lastT < CFG.UMPIRE_MIN_GAP) return;
+    if (speaking) {
+      if (force) { synth.cancel(); Q = []; }
+      else { if (Q.length < 2) Q.push({text,force}); return; }
+    }
+    lastT = now;
+    const lang = AMB[camb].lang;
+    const voice = vmap[lang] || _bv(lang);
+    const cfg = AMB[camb].tts;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang; u.rate = cfg.rate; u.pitch = cfg.pitch;
+    if (voice) u.voice = voice;
+    u.onstart = () => { speaking = true; _show(text); Synth.duck(true); };
+    u.onend = () => {
+      speaking = false; _hide(); Synth.duck(false);
+      if (Q.length) { const nx=Q.shift(); setTimeout(()=>_speak(nx.text,nx.force),350); }
+    };
+    u.onerror = () => { speaking = false; _hide(); Synth.duck(false); };
+    try { synth.speak(u); } catch(e) { speaking=false; _hide(); }
+  }
+
+  function _show(t) { const e=document.getElementById('uov'); if(e){e.textContent=t;e.classList.add('vis');} }
+  function _hide() { document.getElementById('uov')?.classList.remove('vis'); }
+
+  /* ── Score announcements — called after every point ── */
+  function announceScore(ev) {
+    if (!CFG.SCORE_ON) return;
+    const st = Score.getState();
+    const n1=st.p1, n2=st.p2, a=AMB[camb];
+    const fr = a.lang.startsWith('fr');
+
+    if (ev.matchWon) {
+      const w = ev.player===1?n1:n2;
+      _speak(fr?`Jeu, set et match, ${w}.`:`Game, set and match, ${w}.`, true);
+      return;
+    }
+    if (ev.newballs) {
+      setTimeout(()=>_speak(a.newballs, false), 2000);
+    }
+    if (ev.setWon) {
+      const w = ev.player===1?n1:n2;
+      const sc = ev.setScoreStr;
+      _speak(fr?`${a.game}, et set, ${w}. ${sc}.`:`${a.game} and set, ${w}. ${sc}.`, true);
+      return;
+    }
+    if (ev.gameWon) {
+      const w = ev.player===1?n1:n2;
+      const gsc = ev.scoreStr;
+      _speak(fr?`${a.game}, ${w}. ${gsc}.`:`${a.game}, ${w}. ${gsc}.`, false);
+      return;
+    }
+    // Point score — announce EVERY point (as real umpires do)
+    const ds = Score.getDS();
+    if (ev.deuce) { _speak(fr?'Égalité.':'Deuce.', false); return; }
+    if (ev.advantage) {
+      _speak(fr?`Avantage, ${ev.scoreStr.includes(n1)?n1:n2}.`:`Advantage, ${ev.scoreStr.includes(n1)?n1:n2}.`, false);
+      return;
+    }
+    // Announce score with server's score first (as per real tennis rules)
+    const srv = st.serving;
+    const s1 = srv===1 ? ds.p1 : ds.p2;
+    const s2 = srv===1 ? ds.p2 : ds.p1;
+    if (G_inTB_compat(ds)) {
+      _speak(`${s1}–${s2}.`, false);
+    } else {
+      _speak(`${s1}–${s2}.`, false);
+    }
+  }
+
+  function G_inTB_compat(ds) { return ds.tb; }
+
+  function announceEvent(type) {
+    const a = AMB[camb], now = Date.now();
+    switch(type) {
+      case 'quiet': if(now-lastT > CFG.UMPIRE_MIN_GAP*1.4) _speak(a.quiet,true); break;
+      case 'let': _speak(a.let_,false); break;
+      case 'fault': if(Math.random()<.35) _speak(a.fault,false); break;
+      case 'time': if(now-lastT > CFG.UMPIRE_MIN_GAP*2) _speak(a.time_,false); break;
+      case 'newballs': _speak(a.newballs,false); break;
+      case 'racket': _speak(a.warn_r,false); break;
+      case 'random': {
+        const fr = a.lang.startsWith('fr');
+        const pool = [a.quiet, a.time_, a.newballs];
+        if (CFG.SCORE_ON) {
+          const ds = Score.getDS();
+          const st = Score.getState();
+          const s1 = st.serving===1?ds.p1:ds.p2, s2 = st.serving===1?ds.p2:ds.p1;
+          pool.push(`${s1}–${s2}.`);
+          pool.push(`${st.games[0]}–${st.games[1]}, ${fr?'au jeu':'in games'}.`);
+        }
+        _speak(pool[Math.floor(Math.random()*pool.length)],false); break;
+      }
+    }
+  }
+
+  function trackNoise(noisy) {
+    if (noisy) { nfr++; if(nfr>=CFG.NOISE_WARN_FRAMES){nfr=0;announceEvent('quiet');} }
+    else nfr = Math.max(0, nfr-1);
+  }
+
+  function setAmb(a) { camb=a; _lv(); }
+  function test() { _speak("Quinze partout. Quiet please. S'il vous plaît.", true); }
+
+  return { announceScore, announceEvent, trackNoise, setAmb, test };
+})();
+
+/* ══════════════════════════════════════════════════════════════════════
+   SYNTH — real sounds + procedural fallback + ducking + duration cap
+   ══════════════════════════════════════════════════════════════════════ */
+const Synth = (() => {
+  let ctx, mGain, dGain, amb;
+  const bufs = {};
+  let loaded = 0;
+  const activeSrcs = new Set();
+
+  function _pink(sec) {
+    const sz=Math.floor((ctx?.sampleRate||44100)*sec);
+    const b=ctx.createBuffer(2,sz,ctx.sampleRate);
+    for(let ch=0;ch<2;ch++){
+      const d=b.getChannelData(ch);
+      let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+      for(let i=0;i<sz;i++){
+        const w=(Math.random()*2)-1;
+        b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;
+        b2=.969*b2+w*.153852;b3=.8665*b3+w*.3104856;
+        b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;
+        d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926;
+      }
+    }
+    return b;
+  }
+
+  async function _load(name, url) {
+    try {
+      const ctrl = new AbortController();
+      const tid = setTimeout(()=>ctrl.abort(), 12000);
+      const r = await fetch(url, {mode:'cors', signal:ctrl.signal});
+      clearTimeout(tid);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const ab = await r.arrayBuffer();
+      bufs[name] = await ctx.decodeAudioData(ab);
+      loaded++;
+      D.set('dsounds', `${loaded}/${Object.keys(SURLS).length}`, 'ok');
+      D.log(`Son: ${name}`, 'ok');
+    } catch(e) {
+      D.log(`Son ${name}: ${e.name==='AbortError'?'timeout':e.message}`, 'warn');
+    }
+  }
+
+  /* Play buffer with hard duration cap — key feature to avoid long crowd sounds */
+  function _playBuf(name, vol=1, offset=0) {
+    if (!bufs[name] || !ctx) return;
+    const buf = bufs[name];
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const g = ctx.createGain();
+    const e = AMB[amb].energy;
+    g.gain.setValueAtTime(vol * e, ctx.currentTime + offset);
+    // Fade out well before SOUND_MAX_MS to avoid abrupt cut
+    const maxSec = CFG.SOUND_MAX_MS / 1000;
+    const fadeStart = Math.max(0, maxSec - 0.8);
+    g.gain.setValueAtTime(vol * e, ctx.currentTime + offset + fadeStart);
+    g.gain.linearRampToValueAtTime(0, ctx.currentTime + offset + maxSec);
+    src.connect(g); g.connect(dGain);
+    src.start(ctx.currentTime + offset);
+    src.stop(ctx.currentTime + offset + maxSec + 0.05);
+    activeSrcs.add(src);
+    src.onended = () => activeSrcs.delete(src);
+  }
+
+  function duck(active) {
+    if (!dGain) return;
+    const t = ctx.currentTime;
+    dGain.gain.cancelScheduledValues(t);
+    dGain.gain.setValueAtTime(dGain.gain.value, t);
+    dGain.gain.linearRampToValueAtTime(active ? .55 : 1.0, t + .4);
+  }
+
+  /* Procedural fallbacks (also capped) */
+  function _clap(t, vol) {
+    const dur=.035+Math.random()*.025, sz=Math.floor(ctx.sampleRate*dur);
+    const b=ctx.createBuffer(1,sz,ctx.sampleRate), d=b.getChannelData(0);
+    for(let i=0;i<sz;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/sz,1.5);
+    const s=ctx.createBufferSource(); s.buffer=b;
+    const hpf=ctx.createBiquadFilter(); hpf.type='highpass'; hpf.frequency.value=900+Math.random()*1100;
+    const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+dur+.05);
+    s.connect(hpf); hpf.connect(g); g.connect(dGain); s.start(t); s.stop(t+dur+.12);
+  }
+
+  function _applause(intensity, dur) {
+    const e=AMB[amb].energy, t0=ctx.currentTime;
+    const rate=5+intensity*22, n=Math.floor(rate*dur);
+    for(let i=0;i<n;i++) _clap(t0+(i/rate)+(Math.random()-.5)*.04,(Math.random()*.45+.25)*intensity*e);
+  }
+
+  function _murmur(intensity, dur) {
+    const e=AMB[amb].energy, t0=ctx.currentTime;
+    for(let i=0;i<3+Math.floor(intensity*3);i++){
+      const f=200+Math.random()*380;
+      const osc=ctx.createOscillator(), vib=ctx.createOscillator();
+      const vg=ctx.createGain(), g=ctx.createGain(), bpf=ctx.createBiquadFilter();
+      osc.type='sawtooth'; osc.frequency.value=f+(Math.random()-.5)*35;
+      vib.type='sine'; vib.frequency.value=4+Math.random()*3; vg.gain.value=3;
+      vib.connect(vg); vg.connect(osc.frequency);
+      bpf.type='bandpass'; bpf.frequency.value=650+Math.random()*550; bpf.Q.value=2;
+      const vol=(.018+Math.random()*.035)*intensity*e, ti=t0+i*.05;
+      g.gain.setValueAtTime(0,ti); g.gain.linearRampToValueAtTime(vol,ti+.18);
+      // Fade out before duration cap
+      g.gain.linearRampToValueAtTime(0.0001, t0+dur-.15);
+      osc.connect(bpf); bpf.connect(g); g.connect(dGain);
+      osc.start(ti); osc.stop(t0+dur); vib.start(ti); vib.stop(t0+dur);
+    }
+  }
+
+  function _sigh(dir) {
+    const e=AMB[amb].energy, t0=ctx.currentTime;
+    for(let i=0;i<10+Math.floor(Math.random()*4);i++){
+      const bf=dir==='up'?270+Math.random()*110:210+Math.random()*70;
+      const ef=dir==='up'?bf+55+Math.random()*35:bf-35-Math.random()*25;
+      const osc=ctx.createOscillator(), g=ctx.createGain(), bpf=ctx.createBiquadFilter();
+      osc.type='sine'; osc.frequency.setValueAtTime(bf,t0+i*.01);
+      osc.frequency.linearRampToValueAtTime(ef,t0+.35+i*.01);
+      bpf.type='bandpass'; bpf.frequency.value=580; bpf.Q.value=1.4;
+      const vol=(.013+Math.random()*.022)*e*(dir==='up'?.9:.7);
+      g.gain.setValueAtTime(0,t0+i*.01); g.gain.linearRampToValueAtTime(vol,t0+i*.01+.07);
+      g.gain.exponentialRampToValueAtTime(.0001,t0+.75+i*.01);
+      osc.connect(bpf); bpf.connect(g); g.connect(dGain); osc.start(t0+i*.01); osc.stop(t0+1.1);
+    }
+  }
+
+  /* All reactions capped at SOUND_MAX_MS */
+  function react(type, params={}) {
+    if (!ctx||!mGain) return;
+    const delay = AMB[amb].delay;
+    const CAP = CFG.SOUND_MAX_MS / 1000; // max duration in seconds
+
+    switch(type) {
+      case 'rally_short':
+        bufs.amb_chat ? _playBuf('amb_chat',.38) : _murmur(.3, Math.min(CAP,.8));
+        break;
+      case 'rally_medium':
+        bufs.appl_soft ? _playBuf('appl_soft',.55) : _murmur(.45, Math.min(CAP,1.2));
+        if (bufs.amb_light) _playBuf('amb_light',.28,.3);
+        else if (!bufs.appl_soft) _applause(.28, Math.min(CAP,.8));
+        break;
+      case 'rally_long':
+        bufs.appl_med ? _playBuf('appl_med',.65) : _murmur(.62, Math.min(CAP,1.5));
+        break;
+      case 'rally_epic':
+        bufs.ovation_soft ? _playBuf('ovation_soft',.72) : _applause(.72, CAP);
+        _murmur(.45, Math.min(CAP,1.8));
+        break;
+      case 'point_winner':
+        setTimeout(()=>{
+          bufs.ovation_strong ? _playBuf('ovation_strong',.8) : _applause(.8, CAP);
+          _murmur(.42, Math.min(CAP,2));
+          setLevel(.82,.28);
+        }, delay*.5);
+        break;
+      case 'point_epic':
+        setTimeout(()=>{
+          bufs.ovation_epic ? _playBuf('ovation_epic',.9) : _applause(.9, CAP);
+          _murmur(.55, CAP);
+          setLevel(.9,.25);
+        }, delay*.3);
+        break;
+      case 'point_clean':
+        _sigh('up');
+        setTimeout(()=>{
+          bufs.appl_cheer ? _playBuf('appl_cheer',.62) : _applause(.62, CAP);
+          setLevel(.68,.38);
+        }, delay);
+        break;
+      case 'point_error':
+        bufs.sigh_sad ? _playBuf('sigh_sad',.75) : _sigh('down');
+        setTimeout(()=>{ bufs.amb_quiet?_playBuf('amb_quiet',.28):_murmur(.28,Math.min(CAP,1.2));},450);
+        break;
+      case 'let':
+        _sigh('up');
+        setTimeout(()=>{ bufs.amb_chat?_playBuf('amb_chat',.28):_murmur(.2,Math.min(CAP,.7));},280);
+        break;
+      case 'voice_celeb':
+        setTimeout(()=>{
+          bufs.ovation_medium ? _playBuf('ovation_medium',.6) : _applause(.6, CAP);
+        }, delay*.7);
+        break;
+      case 'voice_frust':
+        bufs.amb_quiet?_playBuf('amb_quiet',.24):_murmur(.24,Math.min(CAP,.9));
+        break;
+      case 'pulse':
+        if (AMB[amb].energy>.6) _clap(ctx.currentTime+.05, .09*AMB[amb].energy);
+        break;
+      case 'accel':
+        _murmur(.65, Math.min(CAP,.7));
+        break;
+      case 'random': {
+        const pool=['rally_medium','rally_long','point_winner','point_clean','voice_celeb','rally_epic','point_error'];
+        react(pool[Math.floor(Math.random()*pool.length)]);
+        break;
+      }
+    }
+  }
+
+  function setLevel(level, ramp) {
+    if(!mGain) return;
+    const gain=Math.pow(Math.max(0,Math.min(1,level)),1.4)*.78+.04;
+    mGain.gain.linearRampToValueAtTime(gain, ctx.currentTime+(ramp||.3));
+  }
+
+  function init(audioCtx, amb) {
+    ctx=audioCtx; amb=amb;
+    mGain=ctx.createGain(); mGain.gain.value=.06;
+    dGain=ctx.createGain(); dGain.gain.value=1;
+    mGain.connect(dGain); dGain.connect(ctx.destination);
+    // Ambient bed (looping pink noise filtered)
+    const src=ctx.createBufferSource(); src.buffer=_pink(4); src.loop=true;
+    const bpf=ctx.createBiquadFilter(); bpf.type='bandpass'; bpf.frequency.value=850; bpf.Q.value=.55;
+    const ls=ctx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.value=280; ls.gain.value=7;
+    const g=ctx.createGain(); g.gain.value=.11;
+    src.connect(bpf); bpf.connect(ls); ls.connect(g); g.connect(dGain); src.start();
+    D.set('dsounds','0/'+Object.keys(SURLS).length,'warn');
+    Object.entries(SURLS).forEach(([n,u])=>_load(n,u));
+  }
+
+  function setAmb(a) { amb=a; }
+  function testBeep() {
+    if(!ctx) return;
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.frequency.value=440; g.gain.setValueAtTime(.28,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.5);
+    o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+.5);
+  }
+  function stop() {
+    activeSrcs.forEach(s=>{try{s.stop();}catch(e){}});
+    if(mGain) mGain.gain.linearRampToValueAtTime(0,(ctx?.currentTime||0)+.5);
+  }
+
+  return { init, react, setLevel, setAmb, duck, testBeep, stop };
+})();
+
+/* ══════════════════════════════════════════════════════════════════════
+   DETECTOR — multi-feature + leisure tennis stats layer
+   ══════════════════════════════════════════════════════════════════════ */
+const Detector = (() => {
+  function rms(b){let s=0;for(let i=0;i<b.length;i++)s+=b[i]*b[i];return Math.sqrt(s/b.length);}
+  function zcr(b){let c=0;for(let i=1;i<b.length;i++)if((b[i]>=0)!==(b[i-1]>=0))c++;return c/b.length;}
+  function centroid(fq,sr){let n=0,d=0;for(let i=0;i<fq.length;i++){const f=i*sr/(fq.length*2);n+=f*fq[i];d+=fq[i];}return d>0?n/d:0;}
+
+  const T = {
+    rc:0, lastOnset:0, onsets:[], iois:[],
+    lastSilStart:0, inSil:true,
+    vbuf:{active:false,start:0,zcr:0,rms:0},
+    lastEvT:0, evCD:1400,
+    intensity:0, peak:.001,
+    bl:0, blN:0,
+    pRMS:0, ppRMS:0,
+    lastOnsetForNet:0,
+    // Leisure stats layer
+    observedIOIs: [],  // running IOI histogram
+    adaptiveIOIMin: CFG.IOI_MIN,
+    adaptiveIOIMax: CFG.IOI_MAX,
+    consecutiveHits: 0,
+    lastHitT: 0,
+  };
+
+  function _mIOI() {
+    const h=T.iois; if(h.length<2) return 0;
+    const r=h.slice(-6); return r.reduce((a,b)=>a+b,0)/r.length;
+  }
+  function _accel() {
+    const h=T.iois; if(h.length<6) return false;
+    const r3=(h[h.length-1]+h[h.length-2]+h[h.length-3])/3;
+    const e3=(h[h.length-4]+h[h.length-5]+h[h.length-6])/3;
+    return e3>0&&r3<e3*.70;
+  }
+
+  /* ── Leisure stats validation layer ──
+     Checks if a detected onset is plausible given observed game context.
+     Returns a plausibility score 0–1 */
+  function _plausibility(rmsVal, zcrVal, centVal, ioi, now) {
+    let score = 0;
+    const bl = Math.max(T.bl, CFG.SILENCE_GATE);
+
+    // 1. Spectral profile: hits have high centroid + high ZCR
+    if (centVal > CFG.CENTROID_HIT) score += 0.35;
+    else if (centVal > CFG.CENTROID_HIT * 0.7) score += 0.15;
+
+    if (zcrVal >= CFG.ZCR_HIT_MIN && zcrVal <= CFG.ZCR_HIT_MAX) score += 0.25;
+
+    // 2. IOI plausibility for leisure tennis (500ms–2800ms)
+    // Update adaptive IOI range from observed data
+    if (T.observedIOIs.length >= 4) {
+      const sorted = [...T.observedIOIs].sort((a,b)=>a-b);
+      const p10 = sorted[Math.floor(sorted.length * 0.1)];
+      const p90 = sorted[Math.floor(sorted.length * 0.9)];
+      T.adaptiveIOIMin = Math.max(CFG.IOI_MIN, p10 * 0.6);
+      T.adaptiveIOIMax = Math.min(CFG.IOI_MAX, p90 * 1.6);
+    }
+    if (ioi > 0) {
+      if (ioi >= T.adaptiveIOIMin && ioi <= T.adaptiveIOIMax) score += 0.25;
+      else if (ioi >= CFG.IOI_MIN && ioi <= CFG.IOI_MAX) score += 0.10;
+    } else {
+      score += 0.15; // first hit, no IOI yet
+    }
+
+    // 3. Amplitude well above baseline
+    if (rmsVal > bl * 3.0) score += 0.15;
+    else if (rmsVal > bl * 2.0) score += 0.08;
+
+    return Math.min(1, score);
+  }
+
+  function process(fb, fqb, now, sr) {
+    const r=rms(fb), z=zcr(fb), cent=centroid(fqb,sr);
+    const db=r>0?20*Math.log10(r):-Infinity;
+
+    // Calibration
+    if(T.blN < CFG.BL_FRAMES){
+      T.bl=(T.bl*T.blN+r)/(T.blN+1); T.blN++;
+    }
+    const bl = CFG.CAL_BL>0 ? CFG.CAL_BL : Math.max(T.bl, CFG.SILENCE_GATE);
+    T.peak = Math.max(T.peak*.9995, r);
+
+    // Onset detection
+    const d1=r-T.pRMS, d2=T.pRMS-T.ppRMS;
+    const thr=Math.max(CFG.ONSET_DELTA_MIN, bl*CFG.ONSET_FACTOR);
+    const isPeaky = d1>thr && d1>d2*.35 && r>bl*1.9 && (now-T.lastOnset)>CFG.REFRACT_MS;
+
+    // IOI for this potential onset
+    const candidateIOI = T.lastOnset > 0 ? now - T.lastOnset : 0;
+
+    // Multi-feature score
+    let fScore = 0;
+    if (isPeaky) fScore++;
+    if (cent > CFG.CENTROID_HIT) fScore++;
+    if (z >= CFG.ZCR_HIT_MIN && z <= CFG.ZCR_HIT_MAX) fScore++;
+
+    // Leisure stats plausibility
+    const plaus = _plausibility(r, z, cent, candidateIOI, now);
+
+    // Accept onset if: peaky + at least 1 more feature + plausibility > 0.4
+    const isOnset = isPeaky && fScore >= 2 && plaus >= 0.38;
+
+    if (isOnset) {
+      const ioi = T.lastOnset>0 ? now-T.lastOnset : 0;
+      T.lastOnset=now; T.lastOnsetForNet=now;
+      if (ioi>0 && ioi<3500) {
+        T.iois.push(ioi); if(T.iois.length>20) T.iois.shift();
+        T.observedIOIs.push(ioi); if(T.observedIOIs.length>40) T.observedIOIs.shift();
+      }
+      T.onsets.push(now); T.rc++;
+    }
+    const cut=now-8000;
+    while(T.onsets.length>0&&T.onsets[0]<cut) T.onsets.shift();
+
+    // Net ball detection
+    let netDet=false;
+    if (!isOnset && T.lastOnsetForNet>0) {
+      const tso=now-T.lastOnsetForNet;
+      if (tso>120 && tso<CFG.NET_WIN_MS) {
+        if (cent<CFG.CENTROID_NET && z<.08 && r>bl*1.3) {
+          netDet=true; T.lastOnsetForNet=0;
+        }
+      }
+    }
+
+    // Voice detection
+    const isVoice=z>=CFG.ZCR_V_MIN&&z<=CFG.ZCR_V_MAX&&r>bl*1.7&&cent<2400;
+    let voiceEv=null;
+    if (isVoice) {
+      if (!T.vbuf.active) T.vbuf={active:true,start:now,zcr:z,rms:r};
+      else T.vbuf.rms=Math.max(T.vbuf.rms,r);
+    } else if (T.vbuf.active) {
+      const dur=now-T.vbuf.start;
+      if (dur>=CFG.VOICE_DUR_MIN)
+        voiceEv={type:T.vbuf.zcr>.13?'voice_celeb':'voice_frust',dur};
+      T.vbuf={active:false,start:0,zcr:0,rms:0};
+    }
+
+    // Silence detection (longer window for leisure)
+    const isSil=r<bl*1.18;
+    if (isSil) { if(!T.inSil){T.inSil=true;T.lastSilStart=now;} }
+    else T.inSil=false;
+    const silDur=T.inSil?now-T.lastSilStart:0;
+
+    // Noise tracking
+    Umpire.trackNoise(r>bl*5&&!isOnset&&!T.inSil);
+
+    const recentOnsets=T.onsets.filter(t=>t>now-3000);
+    const rate=recentOnsets.length/3;
+    const avgIOI=_mIOI(), isAccel=_accel();
+
+    // Intensity
+    let tI=0;
+    if (!T.inSil) {
+      const rf=Math.min(1,T.rc/16), sf=Math.min(1,rate/2.8);
+      const vf=Math.min(1,r/Math.max(T.peak*.5,.01));
+      tI=rf*.45+sf*.35+vf*.2;
+    }
+    T.intensity=T.intensity*.85+tI*.15;
+
+    // State + event
+    let state='silence', event=null;
+    if (T.inSil && silDur>CFG.RALLY_RESET_MS && T.rc>0 && (now-T.lastEvT)>T.evCD) {
+      const rc=T.rc; T.lastEvT=now;
+      if (rc===1)             event={type:'point_winner',count:1};
+      else if(rc<=2&&avgIOI<320) event={type:'point_winner',count:2};
+      else if(rc<=5)          event={type:'point_clean',count:rc};
+      else if(rc<=12)         event={type:'rally_medium',count:rc};
+      else if(rc<=20)         event={type:'rally_long',count:rc};
+      else                    event={type:'rally_epic',count:rc};
+      T.rc=0; T.iois=[]; T.onsets=[]; state='react';
+    } else if (netDet&&(now-T.lastEvT)>900) {
+      event={type:'let'}; state='react'; T.lastEvT=now;
+    } else if (!T.inSil) {
+      const rc=T.rc;
+      if (rc<=1&&rate<.4)  state='murmur';
+      else if(rc<=4)       state='rally';
+      else if(rc<=12)      state=isAccel?'tension':'rally';
+      else if(rc<=20)      state='tension';
+      else                 state='ovation';
+      if (isOnset&&rc>3&&rate>1.0&&(now-T.lastEvT)>700) {
+        Synth.react('pulse');
+        if(isAccel){T.lastEvT=now;Synth.react('accel');}
+      }
+    }
+    if (voiceEv&&(now-T.lastEvT)>900) {
+      T.lastEvT=now; state='react'; event=voiceEv;
+      if(voiceEv.type==='voice_frust'&&voiceEv.dur>1600)
+        setTimeout(()=>Umpire.announceEvent('racket'),1300);
+    }
+    // Long silence → "time"
+    if (T.inSil && silDur>20000 && (now-T.lastEvT)>16000) {
+      Umpire.announceEvent('time'); T.lastEvT=now;
+    }
+
+    Synth.setLevel(T.intensity, .28);
+    T.ppRMS=T.pRMS; T.pRMS=r;
+
+    return {r,z,db,cent,rate,rc:T.rc,avgIOI,isAccel,
+            silDur,voiceActive:T.vbuf.active,isOnset,netDet,
+            state,event,intensity:T.intensity,bl,plaus};
+  }
+
+  function reset(){
+    Object.assign(T,{rc:0,lastOnset:0,onsets:[],iois:[],lastSilStart:0,
+      inSil:true,vbuf:{active:false,start:0,zcr:0,rms:0},
+      lastEvT:0,intensity:0,peak:.001,bl:0,blN:0,pRMS:0,ppRMS:0,
+      lastOnsetForNet:0,observedIOIs:[],adaptiveIOIMin:CFG.IOI_MIN,
+      adaptiveIOIMax:CFG.IOI_MAX});
+  }
+
+  return { process, reset, _T:T };
+})();
+
+/* ══════════════════════════════════════════════════════════════════════
+   VISUALIZER
+   ══════════════════════════════════════════════════════════════════════ */
+const Viz = (() => {
+  let cv,cx,raf,an,fqBuf,cI=0,cC='#4a5568';
+  const hist=[];
+  function init(c,a){cv=c;an=a;cx=c.getContext('2d');fqBuf=new Uint8Array(a.frequencyBinCount);_resize();window.addEventListener('resize',_resize);_loop();}
+  function _resize(){cv.width=cv.offsetWidth*devicePixelRatio;cv.height=cv.offsetHeight*devicePixelRatio;}
+  function update(i,c){cI=i;cC=c;hist.push(i);if(hist.length>80)hist.shift();}
+  function _loop(){
+    raf=requestAnimationFrame(_loop); if(!cx||!an)return;
+    an.getByteFrequencyData(fqBuf);
+    const W=cv.width,H=cv.height; cx.clearRect(0,0,W,H);
+    const mb=Math.floor(fqBuf.length/2.5),bw=W/mb;
+    for(let i=0;i<mb;i++){const v=fqBuf[i]/255,h=v*H*.34*(0.5+cI*.5);
+      cx.fillStyle=`hsla(${120+i/mb*80},70%,55%,${.1+v*.36})`; cx.fillRect(i*bw,H-h,Math.max(1,bw-1),h);}
+    if(hist.length>2){cx.beginPath();cx.strokeStyle=cC;cx.lineWidth=2*devicePixelRatio;cx.globalAlpha=.58;
+      const step=W/79; hist.forEach((v,i)=>{const x=i*step,y=H*.5-v*H*.24;i===0?cx.moveTo(x,y):cx.lineTo(x,y);});
+      cx.stroke();cx.globalAlpha=1;}
+  }
+  function stop(){if(raf)cancelAnimationFrame(raf);window.removeEventListener('resize',_resize);}
+  return{init,update,stop};
+})();
+
+/* ══════════════════════════════════════════════════════════════════════
+   DIAGNOSTIC
+   ══════════════════════════════════════════════════════════════════════ */
+const D = (() => {
+  function log(msg,lv='info'){
+    (lv==='err'?console.error:lv==='warn'?console.warn:console.log)(`[CC5] ${msg}`);
+    const el=document.getElementById('dlog'); if(!el)return;
+    const t=new Date().toISOString().slice(11,19);
+    const r=document.createElement('div'); r.className='dle';
+    r.innerHTML=`<span class="dlt">${t}</span><span class="dlm ${lv}">${msg}</span>`;
+    el.appendChild(r); el.scrollTop=el.scrollHeight;
+  }
+  function set(id,val,lv=''){
+    const el=document.getElementById(id); if(!el)return;
+    el.textContent=val; el.className=`dv${lv?' '+lv:''}`;
+  }
+  return{log,set};
+})();
+
+/* ══════════════════════════════════════════════════════════════════════
+   UI
+   ══════════════════════════════════════════════════════════════════════ */
+const UI = (() => {
+  const IDS=['si','sc','ssu','sp','sd','sm'];
+  let logE=[];
+
+  function show(n){ IDS.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('hidden',id!==n);}); }
+
+  function updateState(state,intensity,m){
+    const def=STATES[state]||STATES.silence;
+    const sl=document.getElementById('stlbl'), ss=document.getElementById('stsub');
+    if(sl){sl.textContent=def.label;sl.style.color=def.color;}
+    if(ss) ss.textContent=def.sub;
+    const glows={silence:'transparent',murmur:'rgba(56,178,232,.07)',rally:'rgba(245,166,35,.10)',
+                 tension:'rgba(245,166,35,.16)',react:'rgba(255,68,85,.16)',ovation:'rgba(200,245,58,.18)'};
+    const gw=document.getElementById('glow');
+    if(gw) gw.style.background=`radial-gradient(ellipse 60% 50% at 50% 60%, ${glows[state]||'transparent'} 0%, transparent 70%)`;
+    const rf=document.getElementById('rfi'), rp=document.getElementById('rpct');
+    if(rf){rf.style.strokeDashoffset=CFG.CIRC-(intensity*CFG.CIRC);rf.style.stroke=def.ring;}
+    if(rp){rp.textContent=Math.round(intensity*100);rp.style.color=def.color;}
+    if(m){
+      _m('mvol','mvv',Math.min(100,(m.r/.3)*100),isFinite(m.db)?m.db.toFixed(1)+'dB':'–∞');
+      _m('mcent','mcentv',Math.min(100,(m.cent/4000)*100),Math.round(m.cent)+'Hz');
+      _m('mrally','mrallyv',Math.min(100,(m.rc/22)*100),m.rc+' coups');
+      _m('mraw','mrawv',Math.min(100,(m.r/Math.max(Detector._T.peak,.001))*100),m.r.toFixed(4));
+      const dmb=document.getElementById('dmbar');if(dmb)dmb.style.width=Math.min(100,(m.r/.2)*100)+'%';
+      const dr=document.getElementById('drms');if(dr){dr.textContent=m.r.toFixed(5);dr.className='dv '+(m.r>.001?'ok':m.r>.0001?'warn':'err');}
+      D.set('dbase',m.bl.toFixed(5),m.bl>0?'ok':'warn');
+    }
+    if(state==='ovation'||state==='react') if(Math.random()<.28) _pt(def.color);
+    return def.ring;
+  }
+
+  function _m(bid,vid,pct,txt){
+    const b=document.getElementById(bid),v=document.getElementById(vid);
+    if(b)b.style.width=pct+'%'; if(v)v.textContent=txt;
+  }
+
+  function updateScore(){
+    if(!CFG.SCORE_ON) return;
+    const st=Score.getState(), ds=Score.getDS();
+    const $=id=>document.getElementById(id);
+    const set=(id,val)=>{const e=$(id);if(e)e.textContent=val;};
+    set('sn1',st.p1); set('sn2',st.p2);
+    // Point display
+    set('sp1p', st.serving===1 ? ds.p1 : ds.p2);
+    set('sp2p', st.serving===1 ? ds.p2 : ds.p1);
+    // Wait — actually display by player, not by server
+    set('sp1p', ds.p1); set('sp2p', ds.p2);
+    set('sg1',st.games[0]); set('sg2',st.games[1]);
+    const d1=$('sd1'),d2=$('sd2');
+    if(d1)d1.classList.toggle('srv',st.serving===1);
+    if(d2)d2.classList.toggle('srv',st.serving===2);
+    _renderSets('ss1',st.sets,0); _renderSets('ss2',st.sets,1);
+    set('ssetlbl', st.inTB ? 'TIE-BREAK' : `SET ${st.set}`);
+    const b1=$('bp1'),b2=$('bp2');
+    if(b1)b1.textContent=`Point ${st.p1}`; if(b2)b2.textContent=`Point ${st.p2}`;
+  }
+
+  function _renderSets(id,sets,pi){
+    const el=document.getElementById(id); if(!el)return; el.innerHTML='';
+    const st=Score.getState();
+    sets.forEach((s,i)=>{
+      const sp=document.createElement('span'); sp.className='sset';
+      const myG=pi===0?s.g1:s.g2, opG=pi===0?s.g2:s.g1;
+      if(myG>opG) sp.classList.add('won');
+      sp.textContent=String(myG); el.appendChild(sp);
+    });
+  }
+
+  function logEvent(type,count){
+    const now=new Date(), t=`${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    const map={
+      point_winner:{ev:'ACE/WINNER',d:'coup direct'},
+      point_clean:{ev:'POINT',d:`${count||0} coups`},
+      rally_medium:{ev:'RALLYE',d:`${count||0} frappes`},
+      rally_long:{ev:'LONG RALLYE',d:`${count||0} frappes`},
+      rally_epic:{ev:'ÉPIQUE !',d:`${count||0}+ frappes`},
+      voice_celeb:{ev:'JOUEUR',d:'victoire'},
+      voice_frust:{ev:'JOUEUR',d:'frustration'},
+      let:{ev:'LET',d:'balle filet'},
+    };
+    const l=map[type]||{ev:type.toUpperCase(),d:''};
+    const e=document.createElement('div'); e.className='le';
+    e.innerHTML=`<span class="lt">${t}</span><span class="lev">${l.ev}</span><span class="ld">${l.d}</span>`;
+    document.getElementById('elog')?.appendChild(e);
+    logE.push(e); if(logE.length>4) logE.shift().remove();
+  }
+
+  function _pt(color){
+    const p=document.createElement('div'); p.className='pt';
+    const x=20+Math.random()*60,y=40+Math.random()*50,sz=3+Math.random()*5,dur=.7+Math.random()*.7;
+    p.style.cssText=`left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;background:${color};animation-duration:${dur}s`;
+    document.getElementById('pw')?.appendChild(p); setTimeout(()=>p.remove(),dur*1000+100);
+  }
+
+  function setAmbLbl(n){const e=document.getElementById('tamb');if(e)e.textContent=AMB[n]?.label||n;}
+  function showPermErr(msg){const e=document.getElementById('perr');if(e)e.textContent=msg;show('sp');}
+
+  return{show,updateState,updateScore,logEvent,setAmbLbl,showPermErr};
+})();
+
+/* ══════════════════════════════════════════════════════════════════════
+   CALIBRATION
+   ══════════════════════════════════════════════════════════════════════ */
+const Cal = (() => {
+  let tmr=null,ph='silence',sF=0,hPk=[],silBl=0;
+  let cCtx=null,cStr=null,cAn=null,cBuf=null;
+
+  async function start(){
+    cCtx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:44100});
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    cStr=stream;
+    const src=cCtx.createMediaStreamSource(stream);
+    cAn=cCtx.createAnalyser(); cAn.fftSize=2048;
+    cBuf=new Float32Array(cAn.fftSize);
+    const sg=cCtx.createGain(); sg.gain.value=0; cAn.connect(sg); sg.connect(cCtx.destination);
+    src.connect(cAn);
+    if(cCtx.state==='suspended') await cCtx.resume();
+    _ph('silence'); tmr=setInterval(_tick,40);
+  }
+
+  function _tick(){
+    cAn.getFloatTimeDomainData(cBuf);
+    let s=0; for(let i=0;i<cBuf.length;i++) s+=cBuf[i]*cBuf[i];
+    const r=Math.sqrt(s/cBuf.length);
+    const mc=document.getElementById('cmic'), rv=document.getElementById('crmsv');
+    if(mc)mc.style.width=Math.min(100,(r/.18)*100)+'%'; if(rv)rv.textContent=r.toFixed(4);
+    if(ph==='silence'){
+      sF++; silBl=(silBl*(sF-1)+r)/sF;
+      const pct=Math.min(100,(sF/75)*100);
+      const cb=document.getElementById('cbar'); if(cb)cb.style.width=pct+'%';
+      const cs=document.getElementById('cstat'); if(cs)cs.textContent=`Mesure silence… ${Math.round(pct)}%`;
+      if(sF>=75) _ph('hit');
+    } else if(ph==='hit'){
+      if(r>silBl*3.5){
+        hPk.push(r);
+        const cs=document.getElementById('cstat'); if(cs)cs.textContent=`Frappe ${hPk.length}/3 ✓`;
+        if(hPk.length>=3) _ph('done');
+      }
+    }
+  }
+
+  function _ph(p){
+    ph=p;
+    const cp=document.getElementById('cph'),cd=document.getElementById('cdc');
+    if(p==='silence'){if(cp)cp.textContent='SILENCE';if(cd)cd.textContent='Silence complet — 3 secondes immobile';}
+    else if(p==='hit'){if(cp)cp.textContent='FRAPPES';if(cd)cd.textContent='Frappe 3 fois dans les mains';const cb=document.getElementById('cbar');if(cb)cb.style.width='0%';}
+    else if(p==='done'){
+      clearInterval(tmr);
+      CFG.CAL_BL=silBl*1.35; CFG.CALIBRATED=true;
+      const cs=document.getElementById('cstat'); if(cs)cs.textContent=`Calibré ✓ bl=${silBl.toFixed(4)}`;
+      if(cp)cp.textContent='PRÊT ✓';
+      document.getElementById('bcdone')?.classList.remove('hidden');
+      D.log(`Cal OK bl=${silBl.toFixed(5)}`,'ok');
+    }
+  }
+
+  function stop(){clearInterval(tmr);cStr?.getTracks().forEach(t=>t.stop());cCtx?.close();}
+  return{start,stop};
+})();
+
+/* ══════════════════════════════════════════════════════════════════════
+   SESSION
+   ══════════════════════════════════════════════════════════════════════ */
+let audioCtx=null, analyserNode=null, micStream=null, analysisTimer=null;
+let floatBuf=null, freqBuf=null;
+let selAmb='roland', zeroCount=0;
+
+async function startSession(){
+  D.log('startSession()','info');
+  if(!audioCtx){
+    try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:44100}); }
+    catch(e){alert(`AudioContext: ${e.message}`);return;}
+  }
+  if(audioCtx.state==='suspended'){try{await audioCtx.resume();}catch(e){}}
+
+  let stream;
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1}});
+    micStream=stream;
+    D.log(`Micro: ${stream.getAudioTracks()[0]?.label||'?'}`,'ok');
+  }catch(e){
+    D.log(`Micro ÉCHEC: ${e.name}`,'err'); UI.showPermErr(`${e.name}: ${e.message}`); return;
+  }
+
+  // Graph: Mic → HPF 200Hz → Analyser → SilentGain → dest (Firefox fix)
+  const src=audioCtx.createMediaStreamSource(stream);
+  const hpf=audioCtx.createBiquadFilter(); hpf.type='highpass'; hpf.frequency.value=200; hpf.Q.value=.7;
+  analyserNode=audioCtx.createAnalyser(); analyserNode.fftSize=CFG.FFT; analyserNode.smoothingTimeConstant=.18;
+  const sg=audioCtx.createGain(); sg.gain.value=0;
+  src.connect(hpf); hpf.connect(analyserNode); analyserNode.connect(sg); sg.connect(audioCtx.destination);
+
+  floatBuf=new Float32Array(analyserNode.fftSize);
+  freqBuf=new Float32Array(analyserNode.frequencyBinCount);
+
+  Synth.init(audioCtx, selAmb);
+  Umpire.setAmb(selAmb);
+  Detector.reset();
+  zeroCount=0;
+
+  Viz.init(document.getElementById('cc'), analyserNode);
+  UI.setAmbLbl(selAmb);
+
+  if(CFG.SCORE_ON){
+    document.getElementById('sbar')?.classList.add('vis');
+    document.getElementById('sbtns')?.classList.add('vis');
+    document.getElementById('rsolobtn')?.classList.add('hidden');
+    UI.updateScore();
+  } else {
+    document.getElementById('rsolobtn')?.classList.remove('hidden');
+  }
+
+  UI.show('sm');
+  D.log('Session active','ok');
+
+  analysisTimer=setInterval(()=>{
+    if(!analyserNode) return;
+    if(audioCtx.state==='suspended'){audioCtx.resume();return;}
+    analyserNode.getFloatTimeDomainData(floatBuf);
+    analyserNode.getFloatFrequencyData(freqBuf);
+    let rs=0; for(let i=0;i<floatBuf.length;i++) rs+=floatBuf[i]*floatBuf[i];
+    const rawRMS=Math.sqrt(rs/floatBuf.length);
+    if(rawRMS<.0001){zeroCount++;if(zeroCount===CFG.NOISE_WARN_FRAMES)D.log(`Signal nul (${audioCtx.state})`,'warn');}
+    else zeroCount=0;
+
+    const now=Date.now();
+    const res=Detector.process(floatBuf,freqBuf,now,audioCtx.sampleRate);
+    const col=UI.updateState(res.state,res.intensity,res);
+    Viz.update(res.intensity,col);
+    if(res.event) _handleEv(res.event);
+  }, CFG.ANALYSIS_MS);
+}
+
+function _handleEv(ev){
+  const type=ev.type;
+  UI.logEvent(type,ev.count);
+  D.log(`Ev: ${type} (${ev.count||0})`,'ok');
+  const a=AMB[selAmb];
+
+  switch(type){
+    case 'point_winner':
+      Synth.react('point_winner');
+      setTimeout(()=>Umpire.announceEvent('fault'), a.delay*1.1+900);
+      break;
+    case 'point_epic':
+      Synth.react('point_epic'); break;
+    case 'point_clean':
+      Synth.react('point_clean'); break;
+    case 'point_error':
+      Synth.react('point_error');
+      setTimeout(()=>Umpire.announceEvent('fault'),380); break;
+    case 'rally_medium': Synth.react('rally_medium'); break;
+    case 'rally_long':   Synth.react('rally_long');   break;
+    case 'rally_epic':   Synth.react('rally_epic');   break;
+    case 'let':
+      Synth.react('let');
+      setTimeout(()=>Umpire.announceEvent('let'),450); break;
+    case 'voice_celeb':  Synth.react('voice_celeb'); break;
+    case 'voice_frust':  Synth.react('voice_frust'); break;
+  }
+}
+
+function stopSession(){
+  D.log('stopSession()','info');
+  clearInterval(analysisTimer); analysisTimer=null;
+  Synth.stop(); Viz.stop(); Detector.reset();
+  if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null;}
+  if(audioCtx){audioCtx.close();audioCtx=null;}
+  analyserNode=null;
+  document.getElementById('sbar')?.classList.remove('vis');
+  document.getElementById('sbtns')?.classList.remove('vis');
+  UI.show('si');
+  Score.reset();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DIAG
+   ══════════════════════════════════════════════════════════════════════ */
+function initDiag(){
+  D.set('dac',!!(window.AudioContext||window.webkitAudioContext)?'OK':'ABSENT',!!(window.AudioContext||window.webkitAudioContext)?'ok':'err');
+  D.set('dgum',!!(navigator.mediaDevices?.getUserMedia)?'OK':'ABSENT',!!(navigator.mediaDevices?.getUserMedia)?'ok':'err');
+  D.set('dtts',!!(typeof speechSynthesis!=='undefined')?'OK':'ABSENT',!!(typeof speechSynthesis!=='undefined')?'ok':'warn');
+  D.set('dsec2',window.isSecureContext?'OUI':'NON',window.isSecureContext?'ok':'err');
+}
+let dmicTmr=null;
+async function diagMic(){
+  D.log('Test micro…','info');
+  let tCtx,tStr;
+  try{
+    tCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(tCtx.state==='suspended') await tCtx.resume();
+    tStr=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    D.log('getUserMedia OK','ok');
+  }catch(e){D.log(`Micro: ${e.message}`,'err');return;}
+  const an=tCtx.createAnalyser(); an.fftSize=1024;
+  const src=tCtx.createMediaStreamSource(tStr);
+  const sg=tCtx.createGain(); sg.gain.value=0; an.connect(sg); sg.connect(tCtx.destination); src.connect(an);
+  const buf=new Float32Array(an.fftSize); let fr=0,nn=0,pk=0;
+  D.log('3s — fais du bruit !','warn');
+  if(dmicTmr)clearInterval(dmicTmr);
+  dmicTmr=setInterval(()=>{
+    an.getFloatTimeDomainData(buf);
+    let s=0; for(let i=0;i<buf.length;i++) s+=buf[i]*buf[i];
+    const r=Math.sqrt(s/buf.length); pk=Math.max(pk,r); if(r>.0001)nn++; fr++;
+    const dmb=document.getElementById('dmbar');if(dmb)dmb.style.width=Math.min(100,(r/.18)*100)+'%';
+    const dr=document.getElementById('drms');if(dr){dr.textContent=r.toFixed(5);dr.className='dv '+(r>.001?'ok':r>.0001?'warn':'err');}
+    D.set('dfr',`${nn}/${fr}`);
+    if(fr>=75){clearInterval(dmicTmr);dmicTmr=null;
+      D.log(nn>10?`✓ Signal OK pk=${pk.toFixed(4)}`:`✗ Faible pk=${pk.toFixed(5)}`,(nn>10?'ok':'err'));
+      tStr.getTracks().forEach(t=>t.stop());try{tCtx.close();}catch(x){}
+    }
+  },40);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   EVENTS
+   ══════════════════════════════════════════════════════════════════════ */
+// Ambiance
+document.querySelectorAll('.abtn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.abtn').forEach(b=>{b.classList.remove('sel');b.setAttribute('aria-pressed','false');});
+    btn.classList.add('sel'); btn.setAttribute('aria-pressed','true');
+    selAmb=btn.dataset.amb;
+  });
+});
+
+// Score toggle
+document.getElementById('stoggle')?.addEventListener('change',e=>{CFG.SCORE_ON=e.target.checked;});
+
+// Start — pre-create AudioContext in gesture
+document.getElementById('bstart')?.addEventListener('click',async()=>{
+  D.log('START','info');
+  if(!audioCtx){
+    try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:44100}); }
+    catch(e){ D.log(`AudioCtx pré: ${e.message}`,'warn'); }
+  }
+  if(audioCtx?.state==='suspended') try{await audioCtx.resume();}catch(e){}
+  if(CFG.SCORE_ON){ UI.show('ssu'); }
+  else { UI.show('sc'); Cal.start().catch(()=>startSession()); }
+});
+
+// Score setup
+document.getElementById('bsok')?.addEventListener('click',()=>{
+  const n1=document.getElementById('p1n')?.value.trim()||'J1';
+  const n2=document.getElementById('p2n')?.value.trim()||'J2';
+  Score.reset(n1,n2); UI.show('sc'); Cal.start().catch(()=>startSession());
+});
+document.getElementById('bssk')?.addEventListener('click',()=>{
+  Score.reset('J1','J2'); UI.show('sc'); Cal.start().catch(()=>startSession());
+});
+
+// Cal
+document.getElementById('bcskip')?.addEventListener('click',()=>{Cal.stop();startSession();});
+document.getElementById('bcdone')?.addEventListener('click',()=>{Cal.stop();startSession();});
+
+// Stop / retry
+document.getElementById('bstop')?.addEventListener('click',stopSession);
+document.getElementById('bretry')?.addEventListener('click',()=>UI.show('si'));
+
+// Diag
+document.getElementById('bdiag')?.addEventListener('click',()=>{UI.show('sd');initDiag();});
+document.getElementById('btodiag')?.addEventListener('click',()=>{UI.show('sd');initDiag();});
+document.getElementById('dbback')?.addEventListener('click',()=>UI.show('si'));
+document.getElementById('dbmic')?.addEventListener('click',diagMic);
+document.getElementById('dbaudio')?.addEventListener('click',()=>{
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  Synth.testBeep(); D.log('Beep','ok');
+});
+document.getElementById('dbtts')?.addEventListener('click',()=>{Umpire.test();D.log('TTS test','ok');});
+document.getElementById('dblaunch')?.addEventListener('click',()=>{UI.show('si');setTimeout(startSession,100);});
+
+// Score point buttons
+function _scorePoint(player){
+  if(!CFG.SCORE_ON) return;
+  const ev=Score.addPoint(player);
+  if(!ev) return;
+  UI.updateScore();
+  // Crowd reaction immediately, umpire announces after with ducking
+  const isGame=ev.gameWon, isSet=ev.setWon, isMatch=ev.matchWon;
+  if(isMatch)      { Synth.react('point_epic');   setTimeout(()=>Umpire.announceScore(ev),2200); }
+  else if(isSet)   { Synth.react('point_epic');   setTimeout(()=>Umpire.announceScore(ev),1800); }
+  else if(isGame)  { Synth.react('point_winner'); setTimeout(()=>Umpire.announceScore(ev),1400); }
+  else             { Synth.react('point_clean');  setTimeout(()=>Umpire.announceScore(ev),700);  }
+  UI.logEvent('point_clean', 0);
+}
+document.getElementById('bp1')?.addEventListener('click',()=>_scorePoint(1));
+document.getElementById('bp2')?.addEventListener('click',()=>_scorePoint(2));
+
+// Random crowd
+['brs','brsa'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('click',()=>{ Synth.react('random'); D.log('Réaction aléatoire','info'); });
+});
+
+// Random umpire
+document.getElementById('bru')?.addEventListener('click',()=>{ Umpire.announceEvent('random'); D.log('Arbitre aléatoire','info'); });
+
+// AudioContext resume (mobile)
+document.getElementById('stage')?.addEventListener('click',()=>{ if(audioCtx?.state==='suspended') audioCtx.resume(); });
+document.getElementById('sm')?.addEventListener('touchstart',()=>{ if(audioCtx?.state==='suspended') audioCtx.resume(); },{passive:true});
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&audioCtx?.state==='suspended') audioCtx.resume(); });
+
+// Init logs
+D.log(`Court Crowd v5 — ${navigator.userAgent.slice(0,48)}`,'ok');
+D.log(`Secure:${window.isSecureContext} ${location.protocol}`,(window.isSecureContext?'ok':'warn'));
+</script>
+</body>
+</html>
