@@ -3,39 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Court Crowd v5</title>
+<title>Court Crowd v6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Barlow+Condensed:wght@300;600;800&display=swap" rel="stylesheet">
+<!-- TensorFlow.js + YAMNet -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
 <style>
-:root {
-  --bg:#080a0d; --surf:#0e1117; --brd:#1e2530;
-  --txt:#e8edf5; --mut:#4a5568;
-  --acc:#c8f53a; --warm:#f5a623; --hot:#ff4455;
-  --cool:#38b2e8; --ok:#4ade80; --warn:#fbbf24;
+:root{
+  --bg:#080a0d;--surf:#0e1117;--brd:#1e2530;
+  --txt:#e8edf5;--mut:#4a5568;
+  --acc:#c8f53a;--warm:#f5a623;--hot:#ff4455;
+  --cool:#38b2e8;--ok:#4ade80;--warn:#fbbf24;
   --fd:'Bebas Neue',sans-serif;
   --fu:'Barlow Condensed',sans-serif;
   --fm:'DM Mono',monospace;
-  --r:4px; --circ:502;
+  --r:4px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
   font-family:var(--fu);overflow:hidden;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  transition:opacity 350ms ease,transform 350ms ease}
+  align-items:center;justify-content:center;transition:opacity 350ms ease,transform 350ms ease}
 .screen.hidden{opacity:0;pointer-events:none;transform:scale(.97)}
 .hidden{display:none!important}
 
+/* ── LOADING SCREEN ── */
+#sload{background:var(--bg);gap:20px;padding:20px;text-align:center}
+.load-logo{font-family:var(--fd);font-size:clamp(48px,14vw,96px);color:var(--acc);
+  letter-spacing:.04em;line-height:.9;text-shadow:0 0 40px rgba(200,245,58,.25)}
+.load-status{font-family:var(--fm);font-size:11px;color:var(--mut);letter-spacing:.15em}
+.load-bar-bg{width:240px;height:3px;background:var(--brd);border-radius:2px;overflow:hidden}
+.load-bar-fill{height:100%;background:var(--acc);width:0%;transition:width 300ms ease}
+.load-detail{font-family:var(--fm);font-size:9px;color:var(--brd);letter-spacing:.1em;max-width:280px}
+
 /* ── INTRO ── */
 #si{background:var(--bg);gap:16px;padding:20px}
-.logo .c1{font-family:var(--fd);font-size:clamp(44px,13vw,90px);color:var(--txt);
+.logo .c1{font-family:var(--fd);font-size:clamp(42px,13vw,88px);color:var(--txt);
   letter-spacing:.04em;display:block;line-height:.9}
-.logo .c2{font-family:var(--fd);font-size:clamp(44px,13vw,90px);color:var(--acc);
-  letter-spacing:.04em;display:block;line-height:.9;text-shadow:0 0 36px rgba(200,245,58,.28)}
-.logo .c3{font-size:10px;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--mut);margin-top:4px;display:block}
-.slbl{font-size:9px;letter-spacing:.24em;text-transform:uppercase;
-  color:var(--mut);width:100%;max-width:360px;margin-bottom:5px}
+.logo .c2{font-family:var(--fd);font-size:clamp(42px,13vw,88px);color:var(--acc);
+  letter-spacing:.04em;display:block;line-height:.9;text-shadow:0 0 36px rgba(200,245,58,.25)}
+.logo .c3{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);margin-top:4px;display:block}
+.slbl{font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--mut);width:100%;max-width:360px;margin-bottom:5px}
 .agrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:100%;max-width:360px}
 .abtn{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);
   padding:9px 5px;cursor:pointer;text-align:center;-webkit-user-select:none;user-select:none}
@@ -44,9 +52,8 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
 .abtn .af{font-size:20px;display:block;margin-bottom:2px}
 .abtn .an{font-family:var(--fd);font-size:16px;color:var(--txt);display:block}
 .abtn .ad{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);display:block;margin-top:1px}
-.trow{display:flex;align-items:center;justify-content:space-between;
-  width:100%;max-width:360px;background:var(--surf);border:1px solid var(--brd);
-  border-radius:var(--r);padding:8px 12px}
+.trow{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:360px;
+  background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:8px 12px}
 .tlbl{font-size:13px;color:var(--txt)}
 .tgl{position:relative;width:40px;height:20px;cursor:pointer;flex-shrink:0}
 .tgl input{opacity:0;width:0;height:0}
@@ -59,25 +66,15 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
   font-family:var(--fd);font-size:22px;letter-spacing:.12em;padding:11px 0;cursor:pointer;
   width:100%;max-width:360px;box-shadow:0 0 24px rgba(200,245,58,.18)}
 .sbtn:active{transform:scale(.97)}
+.sbtn:disabled{opacity:.5;cursor:not-allowed}
 .lbtn{background:transparent;border:none;color:var(--mut);font-family:var(--fm);
   font-size:11px;cursor:pointer;padding:4px;letter-spacing:.1em}
+.yamnet-badge{display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--fm);font-size:9px;letter-spacing:.12em;
+  color:var(--acc);border:1px solid rgba(200,245,58,.3);border-radius:2px;
+  padding:2px 7px;background:rgba(200,245,58,.06)}
 
-/* ── CAL ── */
-#sc{background:var(--bg);gap:12px;padding:20px;text-align:center}
-.ct{font-family:var(--fd);font-size:30px;letter-spacing:.08em;color:var(--acc)}
-.cp{font-family:var(--fd);font-size:22px;letter-spacing:.05em;color:var(--txt)}
-.cd{font-size:11px;color:var(--mut);max-width:270px;line-height:1.5}
-.cpr{width:100%;max-width:280px;height:3px;background:var(--brd);border-radius:2px;overflow:hidden}
-.cb{height:100%;background:var(--acc);width:0%;transition:width 100ms linear}
-.cmb{height:5px;background:var(--brd);border-radius:2px;overflow:hidden;width:100%;max-width:280px;margin-top:3px}
-.cmf{height:100%;background:var(--acc);width:0%;transition:width 50ms linear}
-.cst{font-family:var(--fm);font-size:10px;color:var(--mut)}
-.bsec{background:transparent;border:1px solid var(--brd);border-radius:var(--r);
-  color:var(--mut);font-family:var(--fu);font-size:11px;letter-spacing:.1em;padding:7px 18px;cursor:pointer}
-.bpri{background:var(--acc);color:#0a0a0a;border:none;border-radius:var(--r);
-  font-family:var(--fd);font-size:18px;letter-spacing:.1em;padding:7px 26px;cursor:pointer}
-
-/* ── SCORE SETUP ── */
+/* ── SETUP SCORE ── */
 #ssu{background:var(--bg);gap:12px;padding:20px}
 .sst{font-family:var(--fd);font-size:28px;letter-spacing:.08em;color:var(--acc)}
 .pins{display:flex;flex-direction:column;gap:7px;width:100%;max-width:290px}
@@ -88,6 +85,10 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
   color:var(--txt);font-family:var(--fu);font-size:14px;padding:6px 9px;outline:none}
 .pinp:focus{border-color:var(--acc)}
 .brow{display:flex;gap:7px;width:100%;max-width:290px}
+.bsec{background:transparent;border:1px solid var(--brd);border-radius:var(--r);
+  color:var(--mut);font-family:var(--fu);font-size:11px;letter-spacing:.1em;padding:7px 18px;cursor:pointer}
+.bpri{background:var(--acc);color:#0a0a0a;border:none;border-radius:var(--r);
+  font-family:var(--fd);font-size:18px;letter-spacing:.1em;padding:7px 26px;cursor:pointer}
 
 /* ── PERM ── */
 #sp{background:var(--bg);gap:12px;padding:20px;text-align:center}
@@ -96,33 +97,6 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
 .perr{font-family:var(--fm);font-size:10px;color:var(--hot);
   background:rgba(255,68,85,.08);border:1px solid rgba(255,68,85,.2);
   border-radius:var(--r);padding:7px 11px;max-width:290px;word-break:break-all}
-
-/* ── DIAG ── */
-#sd{background:var(--bg);padding:20px;gap:0;justify-content:flex-start;overflow-y:auto}
-.dtit{font-family:var(--fd);font-size:22px;letter-spacing:.08em;
-  color:var(--acc);margin-bottom:10px;padding-top:18px;flex-shrink:0}
-.dlog{width:100%;max-width:420px;background:var(--surf);border:1px solid var(--brd);
-  border-radius:var(--r);padding:7px;font-family:var(--fm);font-size:9px;
-  height:120px;overflow-y:auto;margin-bottom:10px;flex-shrink:0}
-.dle{padding:2px 0;border-bottom:1px solid rgba(30,37,48,.4);display:flex;gap:7px}
-.dlt{color:var(--brd);flex-shrink:0}
-.dlm{color:var(--mut)}.dlm.ok{color:var(--ok)}.dlm.warn{color:var(--warn)}.dlm.err{color:var(--hot)}
-.dsec{width:100%;max-width:420px;margin-bottom:10px}
-.dsect{font-size:8px;letter-spacing:.24em;text-transform:uppercase;color:var(--mut);
-  margin-bottom:5px;padding-bottom:2px;border-bottom:1px solid var(--brd)}
-.dr{display:flex;align-items:center;justify-content:space-between;
-  padding:3px 0;border-bottom:1px solid rgba(30,37,48,.4)}
-.dk{font-family:var(--fm);font-size:9px;color:var(--mut)}
-.dv{font-family:var(--fm);font-size:9px;color:var(--txt);text-align:right;max-width:60%}
-.dv.ok{color:var(--ok)}.dv.warn{color:var(--warn)}.dv.err{color:var(--hot)}
-.dmb{height:5px;background:var(--brd);border-radius:2px;overflow:hidden;margin-top:3px}
-.dmf{height:100%;background:var(--acc);width:0%;transition:width 50ms linear}
-.dbtns{display:flex;flex-wrap:wrap;gap:5px;width:100%;max-width:420px;margin-bottom:10px}
-.db{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);
-  color:var(--txt);font-family:var(--fm);font-size:9px;letter-spacing:.08em;
-  padding:5px 9px;cursor:pointer;flex:1;min-width:80px;text-align:center}
-.db.p{border-color:var(--acc);color:var(--acc)}
-.db.x{border-color:var(--hot);color:var(--hot)}
 
 /* ── MAIN ── */
 #sm{justify-content:space-between;padding:0;background:var(--bg)}
@@ -139,12 +113,10 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
 .sset{font-family:var(--fm);font-size:9px;color:var(--mut);min-width:13px;text-align:center}
 .sset.won{color:var(--txt);font-weight:bold}
 .sgm{font-family:var(--fd);font-size:24px;line-height:1;min-width:18px;text-align:center}
-.spts{font-family:var(--fd);font-size:17px;line-height:1;
-  min-width:24px;text-align:center;color:var(--acc)}
+.spts{font-family:var(--fd);font-size:17px;line-height:1;min-width:24px;text-align:center;color:var(--acc)}
 .sdot{width:5px;height:5px;border-radius:50%;background:var(--acc);margin-top:1px;opacity:0}
 .sdot.srv{opacity:1}
-.sdiv{font-family:var(--fm);font-size:8px;color:var(--brd);
-  letter-spacing:.08em;padding:0 5px;white-space:nowrap;text-align:center}
+.sdiv{font-family:var(--fm);font-size:8px;color:var(--brd);letter-spacing:.08em;padding:0 5px;text-align:center}
 
 /* Topbar */
 .topbar{display:flex;align-items:center;justify-content:space-between;
@@ -160,20 +132,28 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
 
 /* Stage */
 .stage{flex:1;width:100%;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;position:relative;overflow:hidden}
+  align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer}
 .glow{position:absolute;inset:0;pointer-events:none;transition:background 600ms ease}
 #cc{width:100%;height:100%;position:absolute;inset:0}
 .pw{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
 .pt{position:absolute;border-radius:50%;animation:pR linear forwards;opacity:0}
 @keyframes pR{0%{opacity:.8;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-100px) scale(.3)}}
+
 /* Umpire overlay */
 .uov{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:20;
   font-family:var(--fd);font-size:clamp(11px,3.2vw,18px);letter-spacing:.07em;
   color:var(--txt);background:rgba(14,17,23,.9);border:1px solid var(--brd);
-  border-radius:var(--r);padding:4px 13px;white-space:nowrap;
-  pointer-events:none;opacity:0;transition:opacity 300ms ease;
-  max-width:92vw;overflow:hidden;text-overflow:ellipsis;text-align:center}
+  border-radius:var(--r);padding:4px 13px;white-space:nowrap;pointer-events:none;
+  opacity:0;transition:opacity 300ms ease;max-width:92vw;overflow:hidden;text-overflow:ellipsis;text-align:center}
 .uov.vis{opacity:1}
+
+/* YAMNet status badge */
+.ybadge{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:15;
+  font-family:var(--fm);font-size:8px;letter-spacing:.1em;color:var(--mut);
+  background:rgba(8,10,13,.7);border:1px solid var(--brd);border-radius:2px;
+  padding:2px 8px;pointer-events:none;white-space:nowrap}
+.ybadge.active{color:var(--acc);border-color:rgba(200,245,58,.3)}
+
 /* Ring */
 .rw{position:relative;z-index:2;margin-bottom:6px}
 #ir{width:clamp(88px,22vw,140px);height:clamp(88px,22vw,140px);transform:rotate(-90deg)}
@@ -186,12 +166,13 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
   align-items:center;justify-content:center;pointer-events:none}
 .rpct{font-family:var(--fd);font-size:clamp(20px,6vw,38px);line-height:1;transition:color 300ms}
 .runt{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+
 /* State */
 .stdisp{position:relative;z-index:2;text-align:center;pointer-events:none}
 .stlbl{font-family:var(--fd);font-size:clamp(34px,10vw,70px);
   letter-spacing:.05em;line-height:1;display:block;transition:color 300ms}
-.stsub{font-size:9px;letter-spacing:.28em;text-transform:uppercase;
-  color:var(--mut);display:block;margin-top:3px}
+.stsub{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--mut);display:block;margin-top:3px}
+
 /* Score buttons */
 .sbtns{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
   z-index:10;display:none;gap:7px;align-items:center}
@@ -202,15 +183,13 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
 .sptb.p1{background:rgba(200,245,58,.13);border:1px solid var(--acc);color:var(--acc)}
 .sptb.p2{background:rgba(56,178,232,.13);border:1px solid var(--cool);color:var(--cool)}
 .rbtn{background:rgba(245,166,35,.1);border:1px solid var(--warm);border-radius:var(--r);
-  color:var(--warm);font-family:var(--fm);font-size:9px;letter-spacing:.08em;
-  padding:6px 9px;cursor:pointer}
+  color:var(--warm);font-family:var(--fm);font-size:9px;letter-spacing:.08em;padding:6px 9px;cursor:pointer}
 .rbtn:active{transform:scale(.95)}
 .rsolobtn{position:absolute;bottom:6px;right:10px;z-index:10}
 .ubtndiv{position:absolute;bottom:6px;left:10px;z-index:10}
 
 /* Meters */
-.mrow{display:flex;gap:5px;padding:6px 12px;width:100%;
-  flex-shrink:0;border-top:1px solid var(--brd)}
+.mrow{display:flex;gap:5px;padding:6px 12px;width:100%;flex-shrink:0;border-top:1px solid var(--brd)}
 .mtr{flex:1;display:flex;flex-direction:column;gap:3px}
 .ml{font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
 .mb{height:2px;background:var(--brd);border-radius:1px;overflow:hidden}
@@ -230,9 +209,18 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
 </head>
 <body>
 
+<!-- LOADING -->
+<div id="sload" class="screen">
+  <div class="load-logo">COURT<br>CROWD</div>
+  <div class="yamnet-badge">🧠 YAMNet ML</div>
+  <div class="load-bar-bg"><div class="load-bar-fill" id="lbar"></div></div>
+  <div class="load-status" id="lstat">Chargement du moteur de reconnaissance…</div>
+  <div class="load-detail" id="ldetail">TensorFlow.js + YAMNet (5Mo) — connexion requise au premier lancement</div>
+</div>
+
 <!-- INTRO -->
-<div id="si" class="screen">
-  <div class="logo"><span class="c1">COURT</span><span class="c2">CROWD</span><span class="c3">Tennis Atmosphere Simulator v5</span></div>
+<div id="si" class="screen hidden">
+  <div class="logo"><span class="c1">COURT</span><span class="c2">CROWD</span><span class="c3">Tennis Atmosphere Simulator v6 · YAMNet ML</span></div>
   <div style="width:100%;max-width:360px">
     <p class="slbl">Ambiance</p>
     <div class="agrid">
@@ -245,32 +233,11 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
   <div style="width:100%;max-width:360px">
     <p class="slbl">Score</p>
     <div class="trow"><span class="tlbl">Suivi du score (manuel)</span>
-      <label class="tgl" aria-label="Activer le suivi du score">
-        <input type="checkbox" id="stoggle"><span class="tsl"></span>
-      </label>
+      <label class="tgl" aria-label="Score"><input type="checkbox" id="stoggle"><span class="tsl"></span></label>
     </div>
   </div>
   <button class="sbtn" id="bstart">LANCER LE MATCH</button>
   <button class="lbtn" id="bdiag">🔧 diagnostic</button>
-</div>
-
-<!-- CALIBRATION -->
-<div id="sc" class="screen hidden">
-  <p class="ct">CALIBRATION</p>
-  <p class="cp" id="cph">SILENCE</p>
-  <p class="cd" id="cdc">Silence complet — 3 secondes immobile</p>
-  <div class="cpr"><div class="cb" id="cbar"></div></div>
-  <div style="width:100%;max-width:280px">
-    <div style="display:flex;justify-content:space-between">
-      <span class="dk">Niveau micro</span><span class="dv" id="crmsv">–</span>
-    </div>
-    <div class="cmb"><div class="cmf" id="cmic"></div></div>
-  </div>
-  <p class="cst" id="cstat">En attente…</p>
-  <div style="display:flex;gap:8px">
-    <button class="bsec" id="bcskip">Ignorer</button>
-    <button class="bpri hidden" id="bcdone">Démarrer →</button>
-  </div>
 </div>
 
 <!-- SCORE SETUP -->
@@ -292,43 +259,12 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
   <h2>Micro inaccessible</h2>
   <p>Erreur :</p>
   <div class="perr" id="perr">–</div>
-  <p>Paramètres → Confidentialité → Microphone</p>
+  <p>Vérifie les permissions micro dans les paramètres du navigateur.</p>
   <button class="bsec" id="bretry">← Retour</button>
-</div>
-
-<!-- DIAG -->
-<div id="sd" class="screen hidden">
-  <p class="dtit">DIAGNOSTIC</p>
-  <div class="dlog" id="dlog"></div>
-  <div class="dsec">
-    <p class="dsect">Environnement</p>
-    <div class="dr"><span class="dk">AudioContext</span><span class="dv" id="dac">–</span></div>
-    <div class="dr"><span class="dk">getUserMedia</span><span class="dv" id="dgum">–</span></div>
-    <div class="dr"><span class="dk">SpeechSynthesis</span><span class="dv" id="dtts">–</span></div>
-    <div class="dr"><span class="dk">Secure context</span><span class="dv" id="dsec2">–</span></div>
-    <div class="dr"><span class="dk">Voix</span><span class="dv" id="dvoice">–</span></div>
-    <div class="dr"><span class="dk">Sons chargés</span><span class="dv" id="dsounds">–</span></div>
-  </div>
-  <div class="dsec">
-    <p class="dsect">Signal micro</p>
-    <div style="display:flex;justify-content:space-between"><span class="dk">RMS</span><span class="dv" id="drms">–</span></div>
-    <div class="dmb"><div class="dmf" id="dmbar"></div></div>
-    <div class="dr" style="margin-top:3px"><span class="dk">Baseline</span><span class="dv" id="dbase">–</span></div>
-    <div class="dr"><span class="dk">Frames actives</span><span class="dv" id="dfr">0</span></div>
-  </div>
-  <div class="dbtns">
-    <button class="db p" id="dbmic">🎙 Micro</button>
-    <button class="db p" id="dbaudio">🔊 Audio</button>
-    <button class="db p" id="dbtts">🗣 Voix</button>
-    <button class="db" id="dbback">← Retour</button>
-    <button class="db x" id="dblaunch">▶ Lancer</button>
-  </div>
 </div>
 
 <!-- MAIN -->
 <div id="sm" class="screen hidden">
-
-  <!-- Score bar -->
   <div class="sbar" id="sbar">
     <div class="spl" id="sp1ui">
       <div class="sdot srv" id="sd1"></div>
@@ -356,8 +292,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
     <span class="ttit">COURT CROWD</span>
     <span class="tamb" id="tamb">Roland Garros</span>
     <div class="tbtns">
-      <button class="tb" id="btodiag">🔧</button>
-      <button class="tb x" id="bstop">■ STOP</button>
+      <button class="tb" id="bstop">■ STOP</button>
     </div>
   </div>
 
@@ -366,6 +301,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
     <div class="glow" id="glow"></div>
     <div class="pw" id="pw"></div>
     <div class="uov" id="uov"></div>
+    <div class="ybadge" id="ybadge" style="cursor:pointer" title="Tap pour tester le son">🧠 YAMNet — en écoute</div>
 
     <div class="rw">
       <svg id="ir" viewBox="0 0 180 180" aria-hidden="true">
@@ -377,17 +313,14 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
 
     <div class="stdisp">
       <span class="stlbl" id="stlbl">EN ATTENTE</span>
-      <span class="stsub" id="stsub">Écoute en cours…</span>
+      <span class="stsub" id="stsub">YAMNet écoute…</span>
     </div>
 
-    <!-- Score point buttons -->
     <div class="sbtns" id="sbtns">
       <button class="sptb p1" id="bp1">Point J1</button>
       <button class="rbtn" id="brs">🎲</button>
       <button class="sptb p2" id="bp2">Point J2</button>
     </div>
-
-    <!-- No-score random + umpire buttons -->
     <div class="rsolobtn" id="rsolobtn">
       <button class="rbtn" id="brsa">🎲 Réaction</button>
     </div>
@@ -397,10 +330,10 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
   </div>
 
   <div class="mrow">
-    <div class="mtr"><span class="ml">Volume</span><div class="mb"><div class="mf" id="mvol" style="background:var(--cool)"></div></div><span class="mv" id="mvv">–∞</span></div>
-    <div class="mtr"><span class="ml">Centroïde</span><div class="mb"><div class="mf" id="mcent" style="background:var(--warm)"></div></div><span class="mv" id="mcentv">0Hz</span></div>
-    <div class="mtr"><span class="ml">Rallye</span><div class="mb"><div class="mf" id="mrally" style="background:var(--acc)"></div></div><span class="mv" id="mrallyv">0</span></div>
-    <div class="mtr"><span class="ml">RAW</span><div class="mb"><div class="mf" id="mraw" style="background:var(--hot)"></div></div><span class="mv" id="mrawv">0.000</span></div>
+    <div class="mtr"><span class="ml">RMS</span><div class="mb"><div class="mf" id="mvol" style="background:var(--cool)"></div></div><span class="mv" id="mvv">–</span></div>
+    <div class="mtr"><span class="ml">STRIKE</span><div class="mb"><div class="mf" id="mstrike" style="background:var(--acc)"></div></div><span class="mv" id="mstrikev">0</span></div>
+    <div class="mtr"><span class="ml">VOICE</span><div class="mb"><div class="mf" id="mvoice" style="background:var(--warm)"></div></div><span class="mv" id="mvoicev">–</span></div>
+    <div class="mtr"><span class="ml">CROWD</span><div class="mb"><div class="mf" id="mcrowd" style="background:var(--hot)"></div></div><span class="mv" id="mcrowdv">0</span></div>
   </div>
 
   <div class="elog" id="elog" aria-live="polite"></div>
@@ -409,29 +342,25 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
 <script>
 'use strict';
 /* ══════════════════════════════════════════════════════════════════════
-   COURT CROWD v5
+   COURT CROWD v6 — YAMNet ML + full feature set
    ══════════════════════════════════════════════════════════════════════ */
 
-/* ── CONFIG ─────────────────────────────────────────────────────────── */
-const CFG = {
-  ANALYSIS_MS:40, FFT:2048,
-  BL_FRAMES:120, SILENCE_GATE:.0022,
-  // Leisure tennis IOI range (ms) — wider than ATP
-  IOI_MIN:400, IOI_MAX:2800,
-  ONSET_FACTOR:3.6, ONSET_DELTA_MIN:.013, REFRACT_MS:100,
-  CENTROID_HIT:1000, CENTROID_NET:550,
-  ZCR_HIT_MIN:.08, ZCR_HIT_MAX:.44,
-  ZCR_V_MIN:.04, ZCR_V_MAX:.26,
-  NET_WIN_MS:500, VOICE_DUR_MIN:220,
-  // Leisure: longer silence before point ends
-  RALLY_RESET_MS:2800,
-  NOISE_WARN_FRAMES:160,
-  UMPIRE_MIN_GAP:7000,
-  // Sound max duration (ms) — crowd reactions capped
-  SOUND_MAX_MS:4500,
-  CAL_BL:0, CALIBRATED:false,
-  SCORE_ON:false,
-  CIRC:2*Math.PI*80,
+/* ── YAMNET CLASS INDICES ────────────────────────────────────────────── */
+const YC = {
+  // Strike sounds
+  SLAP:461, SMASH:463, CRACK:434, WHOOSH:453,
+  // Bounce
+  THUD:454, BASKETBALL:459,
+  // Voice positive
+  SHOUT:6, YELL:9, SCREAM:11,
+  // Voice negative
+  GRUNT:34, GROAN:33, SIGH:23,
+  // Crowd
+  APPLAUSE:62, CHEERING:61, CROWD:64, HUBBUB:65,
+  // Silence
+  SILENCE:494,
+  // Clapping — ignored (false positive for tennis)
+  CLAPPING:58,
 };
 
 /* ── AMBIANCES ──────────────────────────────────────────────────────── */
@@ -439,35 +368,31 @@ const AMB = {
   roland:   {label:'Roland Garros',energy:.82,delay:420,lang:'fr-FR',
     quiet:"S'il vous plaît.",game:'Jeu',fault:'Faute.',let_:'Filet.',
     out:'Dehors.',time_:"Le temps est écoulé.",newballs:'Nouvelles balles.',
-    warn_r:"Avertissement, abus de raquette.",warn_c:"Avertissement, conduite antisportive.",
-    tts:{rate:.82,pitch:.88}},
+    warn_r:"Avertissement, abus de raquette.",tts:{rate:.82,pitch:.88}},
   wimbledon:{label:'Wimbledon',energy:.52,delay:680,lang:'en-GB',
     quiet:'Quiet please.',game:'Game',fault:'Fault.',let_:'Let.',
     out:'Out.',time_:'Time.',newballs:'New balls please.',
-    warn_r:'Warning, racket abuse.',warn_c:'Warning, unsportsmanlike conduct.',
-    tts:{rate:.85,pitch:.85}},
+    warn_r:'Warning, racket abuse.',tts:{rate:.85,pitch:.85}},
   usopen:   {label:'US Open',energy:1.0,delay:200,lang:'en-US',
     quiet:'Quiet please.',game:'Game',fault:'Fault.',let_:'Let.',
     out:'Out.',time_:'Time.',newballs:'New balls please.',
-    warn_r:'Warning, racket abuse.',warn_c:'Warning, unsportsmanlike conduct.',
-    tts:{rate:.9,pitch:.92}},
+    warn_r:'Warning, racket abuse.',tts:{rate:.9,pitch:.92}},
   mix:      {label:'Grand Chelem',energy:.87,delay:320,lang:'fr-FR',
     quiet:"S'il vous plaît.",game:'Jeu',fault:'Faute.',let_:'Filet.',
     out:'Dehors.',time_:"Le temps est écoulé.",newballs:'Nouvelles balles.',
-    warn_r:"Avertissement, abus de raquette.",warn_c:"Avertissement, conduite antisportive.",
-    tts:{rate:.82,pitch:.88}},
+    warn_r:"Avertissement, abus de raquette.",tts:{rate:.82,pitch:.88}},
 };
 
 const STATES = {
   silence:{label:'SILENCE',   sub:'Foule en attente',        color:'#4a5568',ring:'#4a5568'},
   murmur: {label:'MURMURE',   sub:'Échange en cours…',       color:'#38b2e8',ring:'#38b2e8'},
-  rally:  {label:'RALLYE',    sub:'La foule suit…',          color:'#f5a623',ring:'#f5a623'},
+  rally:  {label:'RALLYE',    sub:'La foule suit !',         color:'#f5a623',ring:'#f5a623'},
   tension:{label:'TENSION',   sub:'Rallye intense !',        color:'#f5a623',ring:'#ff8c00'},
   react:  {label:'RÉACTION !',sub:'Point terminé !',         color:'#ff4455',ring:'#ff4455'},
   ovation:{label:'OVATION',   sub:'Public en délire !',      color:'#c8f53a',ring:'#c8f53a'},
 };
 
-/* ── SOUND URLS ─────────────────────────────────────────────────────── */
+/* ── SOUND URLS (validated selection) ──────────────────────────────── */
 const SURLS = {
   ovation_epic:   'https://cdn.freesound.org/previews/481/481782_8432823-lq.mp3',
   ovation_strong: 'https://cdn.freesound.org/previews/481/481776_8432823-lq.mp3',
@@ -480,781 +405,735 @@ const SURLS = {
   amb_light:      'https://cdn.freesound.org/previews/481/481775_8432823-lq.mp3',
   amb_chat:       'https://cdn.freesound.org/previews/481/481777_8432823-lq.mp3',
   sigh_sad:       'https://cdn.freesound.org/previews/619/619007_781461-lq.mp3',
-  sigh_decay:     'https://cdn.freesound.org/previews/481/481780_8432823-lq.mp3',
 };
+
+const SOUND_MAX = 4500; // ms cap on all crowd sounds
+
+/* ══════════════════════════════════════════════════════════════════════
+   YAMNET ENGINE
+   Loads TF.js model, processes 16kHz audio windows, returns scores
+   ══════════════════════════════════════════════════════════════════════ */
+const YAMNet = (() => {
+  let model = null;
+  let ready = false;
+  let loadError = null;
+
+  // YAMNet model URL — hosted on TF Hub via jsdelivr-compatible URL
+  const MODEL_URL = 'https://storage.googleapis.com/tfjs-models/tfjs/yamnet_tfjs/model.json';
+
+  async function load(onProgress) {
+    try {
+      onProgress('Chargement TensorFlow.js…', 10);
+      // Wait for TF to be ready
+      await tf.ready();
+      onProgress('TF.js prêt — chargement modèle YAMNet…', 25);
+
+      model = await tf.loadGraphModel(MODEL_URL, {
+        onProgress: (fraction) => {
+          onProgress(`YAMNet: ${Math.round(fraction*100)}%…`, 25 + Math.round(fraction * 65));
+        }
+      });
+      ready = true;
+      onProgress('YAMNet prêt ✓', 100);
+      D.log('YAMNet chargé', 'ok');
+      return true;
+    } catch(e) {
+      loadError = e.message;
+      D.log(`YAMNet ÉCHEC: ${e.message}`, 'err');
+      onProgress(`YAMNet non disponible — mode heuristique`, 100);
+      return false;
+    }
+  }
+
+  // Process a 16kHz mono Float32Array, returns class scores [521]
+  async function classify(samples16k) {
+    if (!model || !ready) return null;
+    try {
+      // YAMNet expects [samples] tensor at 16kHz
+      const waveform = tf.tensor1d(samples16k);
+      const result = await model.executeAsync({'waveform': waveform});
+      // result is array: [scores, embeddings, log_mel_spectrogram]
+      // scores shape: [num_frames, 521]
+      const scores = Array.from(await result[0].mean(0).data()); // mean over frames
+      tf.dispose([waveform, ...result]);
+      return scores;
+    } catch(e) {
+      D.log(`YAMNet infer: ${e.message}`, 'warn');
+      return null;
+    }
+  }
+
+  // Extract tennis-relevant scores from raw 521-class output
+  function extractTennisScores(scores) {
+    if (!scores) return null;
+    const g = (idx) => scores[idx] || 0;
+    return {
+      strike: Math.max(g(YC.SLAP), g(YC.SMASH), g(YC.CRACK), g(YC.WHOOSH)),
+      bounce: Math.max(g(YC.THUD), g(YC.BASKETBALL)),
+      voice_pos: Math.max(g(YC.SHOUT), g(YC.YELL), g(YC.SCREAM)),
+      voice_neg: Math.max(g(YC.GRUNT), g(YC.GROAN), g(YC.SIGH)),
+      crowd: Math.max(g(YC.APPLAUSE), g(YC.CHEERING), g(YC.CROWD), g(YC.HUBBUB)),
+      silence: g(YC.SILENCE),
+      clapping: g(YC.CLAPPING), // tracked to IGNORE
+    };
+  }
+
+  return { load, classify, extractTennisScores, isReady: () => ready };
+})();
 
 /* ══════════════════════════════════════════════════════════════════════
    SCORE ENGINE — Roland-Garros rules, best-of-3
-   No super-tiebreak: 3rd set played with advantage (no tie-break)
+   3rd set: advantage (no tie-break) — exact RG rules
    ══════════════════════════════════════════════════════════════════════ */
 const Score = (() => {
-  // Points encoding: 0,1,2,3 = 0/15/30/40, 4+ = deuce zone
   const PL = ['0','15','30','40'];
-  let G = {
-    p1:'J1', p2:'J2',
-    serving: 1,          // 1 or 2 — who serves
-    firstServer: 1,      // who served first in the match
-    pts: [0, 0],         // raw point counters this game
-    games: [0, 0],       // games this set
-    sets: [],            // [{g1,g2}] completed sets
-    set: 1,              // current set number (1-3)
-    inTB: false,         // tie-break in progress
-    tbPts: [0, 0],       // tie-break points
-    matchOver: false,
-    winner: null,
-    totalGamesPlayed: 0, // for newballs trigger (every 9 games in RG)
-  };
+  let G = {p1:'J1',p2:'J2',serving:1,pts:[0,0],games:[0,0],
+           sets:[],set:1,inTB:false,tbPts:[0,0],
+           matchOver:false,winner:null,totalGames:0};
 
-  function reset(n1, n2) {
-    G = { p1:n1||'J1', p2:n2||'J2', serving:1, firstServer:1,
-          pts:[0,0], games:[0,0], sets:[], set:1,
-          inTB:false, tbPts:[0,0], matchOver:false, winner:null, totalGamesPlayed:0 };
+  function reset(n1,n2){
+    G={p1:n1||'J1',p2:n2||'J2',serving:1,pts:[0,0],games:[0,0],
+       sets:[],set:1,inTB:false,tbPts:[0,0],matchOver:false,winner:null,totalGames:0};
   }
 
-  // Returns event object describing what happened
-  function addPoint(player) {
-    if (G.matchOver) return null;
-    const wi = player - 1; // winner index 0/1
-    const li = 1 - wi;
-    const ev = { player, gameWon:false, setWon:false, matchWon:false,
-                 scoreStr:'', gameScoreStr:'', deuce:false, advantage:false,
-                 setScoreStr:'', newballs:false };
+  function addPoint(player){
+    if(G.matchOver) return null;
+    const wi=player-1;
+    const ev={player,gameWon:false,setWon:false,matchWon:false,
+              deuce:false,advantage:false,scoreStr:'',gameScoreStr:'',
+              setScoreStr:'',newballs:false};
 
-    if (G.inTB) {
+    if(G.inTB){
       G.tbPts[wi]++;
-      const [a,b] = G.tbPts;
-      // Change serve every 2 points in TB (first point, then every 2)
-      const total = a + b;
-      if (total > 0 && total % 2 === 1) _swapServe();
-      if ((a >= 7 || b >= 7) && Math.abs(a - b) >= 2) {
-        // TB won
-        G.games[wi]++;
-        G.totalGamesPlayed++;
-        ev.gameWon = true;
-        ev.scoreStr = `${a}–${b}`;
-        G.inTB = false; G.tbPts = [0,0];
-        _endSet(player, ev);
-        return ev;
+      const[a,b]=G.tbPts;
+      if((a+b)>0&&(a+b)%2===1) _swap(); // serve changes every 2 points in TB
+      if((a>=7||b>=7)&&Math.abs(a-b)>=2){
+        G.games[wi]++;G.totalGames++;ev.gameWon=true;ev.scoreStr=`${a}–${b}`;
+        G.inTB=false;G.tbPts=[0,0];_checkSet(player,ev);
+      } else {
+        ev.scoreStr=`${a}–${b}`;ev.gameScoreStr=`${G.games[0]}–${G.games[1]}`;
       }
-      ev.scoreStr = `${a}–${b}`;
-      ev.gameScoreStr = `${G.games[0]}–${G.games[1]}`;
       return ev;
     }
 
-    // Normal point scoring
     G.pts[wi]++;
-    const [pa, pb] = G.pts;
+    const[pa,pb]=G.pts;
 
-    // Deuce/advantage zone: both >= 3 (i.e. both have at least 40)
-    if (pa >= 3 && pb >= 3) {
-      if (pa === pb) {
-        // Deuce — reset to deuce (3-3)
-        G.pts = [3, 3];
-        ev.deuce = true;
-        ev.scoreStr = 'Égalité';
-        ev.gameScoreStr = `${G.games[0]}–${G.games[1]}`;
-        return ev;
-      }
-      if (pa - pb >= 2) {
-        // Player 1 wins game from advantage
-        return _winGame(1, ev);
-      }
-      if (pb - pa >= 2) {
-        // Player 2 wins game from advantage
-        return _winGame(2, ev);
-      }
-      // One ahead = advantage
-      ev.advantage = true;
-      ev.scoreStr = pa > pb ? `Avantage ${G.p1}` : `Avantage ${G.p2}`;
-      ev.gameScoreStr = `${G.games[0]}–${G.games[1]}`;
+    // Deuce zone: both >= 3 (40-all)
+    if(pa>=3&&pb>=3){
+      if(pa===pb){G.pts=[3,3];ev.deuce=true;ev.scoreStr='Égalité';ev.gameScoreStr=`${G.games[0]}–${G.games[1]}`;return ev;}
+      if(Math.abs(pa-pb)>=2) return _winGame(player,ev);
+      ev.advantage=true;
+      ev.scoreStr=pa>pb?`Avantage ${G.p1}`:`Avantage ${G.p2}`;
+      ev.gameScoreStr=`${G.games[0]}–${G.games[1]}`;
       return ev;
     }
-
-    // Normal point before deuce
-    if (pa >= 4) return _winGame(1, ev);
-    if (pb >= 4) return _winGame(2, ev);
-
-    // Just a normal point
-    ev.scoreStr = `${PL[pa]}–${PL[pb]}`;
-    ev.gameScoreStr = `${G.games[0]}–${G.games[1]}`;
+    if(pa>=4) return _winGame(1,ev);
+    if(pb>=4) return _winGame(2,ev);
+    ev.scoreStr=`${PL[pa]}–${PL[pb]}`;ev.gameScoreStr=`${G.games[0]}–${G.games[1]}`;
     return ev;
   }
 
-  function _winGame(player, ev) {
-    const wi = player - 1;
-    G.games[wi]++;
-    G.pts = [0, 0];
-    G.totalGamesPlayed++;
-    ev.gameWon = true;
-    ev.scoreStr = `${G.games[0]}–${G.games[1]}`;
-    // Serve changes after each game
-    _swapServe();
-    // Check for new balls (Roland-Garros: every 9 games, then every 11)
-    // Simplified: every 9 total games
-    if (G.totalGamesPlayed % 9 === 0) ev.newballs = true;
-    _checkSetEnd(player, ev);
+  function _winGame(player,ev){
+    const wi=player-1;
+    G.games[wi]++;G.pts=[0,0];G.totalGames++;ev.gameWon=true;
+    _swap(); // serve changes after each game
+    if(G.totalGames%9===0) ev.newballs=true;
+    ev.scoreStr=`${G.games[0]}–${G.games[1]}`;
+    _checkSet(player,ev);
     return ev;
   }
 
-  function _checkSetEnd(player, ev) {
-    const wi = player - 1;
-    const [ga, gb] = G.games;
-    const lead = G.games[wi], trail = G.games[1 - wi];
-    const isLastSet = G.set === 3; // 3rd set in best-of-3
+  function _checkSet(player,ev){
+    const wi=player-1;
+    const[ga,gb]=G.games;
+    const lead=G.games[wi],trail=G.games[1-wi];
+    const isLastSet=G.set===3;
 
-    // Check for tie-break at 6-6 (only in sets 1 and 2 for RG)
-    if (ga === 6 && gb === 6 && !isLastSet) {
-      G.inTB = true; G.tbPts = [0, 0];
-      // In tie-break, server stays same; opponent will serve first point
-      ev.scoreStr = '6–6 · Jeu décisif';
-      return;
+    // Tie-break at 6-6 only in sets 1 and 2
+    if(ga===6&&gb===6&&!isLastSet){
+      G.inTB=true;G.tbPts=[0,0];
+      ev.scoreStr='6–6 · Jeu décisif';return;
     }
 
-    // Set won conditions:
-    // - reach 6 with 2+ game lead
-    // - 7–5 (reached 5-5 then one player got to 7)
-    // - after TB: 7–6
-    const setWon = (lead >= 6 && lead - trail >= 2 && !(ga === 6 && gb === 6)) ||
-                   (lead === 7 && (trail === 5 || trail === 6));
-
-    if (setWon) {
-      G.sets.push({ g1: G.games[0], g2: G.games[1] });
-      const setsWon = G.sets.filter(s => (player===1 ? s.g1 : s.g2) > (player===1 ? s.g2 : s.g1)).length;
-      ev.setWon = true;
-      ev.setScoreStr = `${G.games[0]}–${G.games[1]}`;
-      G.games = [0, 0];
-      G.set++;
-      // After set, server is the one who didn't serve the last game
-      // (already swapped after game win — correct)
-      if (setsWon >= 2) { // win 2 sets in best-of-3
-        G.matchOver = true; G.winner = player; ev.matchWon = true;
-      }
+    // Set won: 6+ with 2 gap, or 7–5, or after TB (7–6)
+    const setWon=(lead>=6&&lead-trail>=2&&!(ga===6&&gb===6))||
+                 (lead===7&&(trail===5||trail===6));
+    if(setWon){
+      G.sets.push({g1:G.games[0],g2:G.games[1]});
+      const sw=G.sets.filter(s=>(player===1?s.g1:s.g2)>(player===1?s.g2:s.g1)).length;
+      ev.setWon=true;ev.setScoreStr=`${G.games[0]}–${G.games[1]}`;
+      G.games=[0,0];G.set++;
+      if(sw>=2){G.matchOver=true;G.winner=player;ev.matchWon=true;}
     }
   }
 
-  function _endSet(player, ev) { _checkSetEnd(player, ev); }
+  function _swap(){G.serving=G.serving===1?2:1;}
 
-  function _swapServe() { G.serving = G.serving === 1 ? 2 : 1; }
-
-  function getDS() {
-    if (G.inTB) return { p1: String(G.tbPts[0]), p2: String(G.tbPts[1]), tb: true };
-    const [pa, pb] = G.pts;
-    if (pa >= 3 && pb >= 3) {
-      if (pa === pb) return { p1:'Éga', p2:'Éga', tb:false };
-      return pa > pb
-        ? { p1:'Av', p2:'', tb:false }
-        : { p1:'', p2:'Av', tb:false };
+  function getDS(){
+    if(G.inTB) return{p1:String(G.tbPts[0]),p2:String(G.tbPts[1]),tb:true};
+    const[pa,pb]=G.pts;
+    if(pa>=3&&pb>=3){
+      if(pa===pb) return{p1:'Éga',p2:'Éga',tb:false};
+      return pa>pb?{p1:'Av',p2:'',tb:false}:{p1:'',p2:'Av',tb:false};
     }
-    return { p1: PL[pa]||'0', p2: PL[pb]||'0', tb:false };
+    return{p1:PL[pa]||'0',p2:PL[pb]||'0',tb:false};
   }
 
-  return { reset, addPoint, getState:()=>G, getDS };
+  return{reset,addPoint,getState:()=>G,getDS};
 })();
 
 /* ══════════════════════════════════════════════════════════════════════
-   UMPIRE — TTS with ducking
+   UMPIRE — TTS with ducking, announces every point
    ══════════════════════════════════════════════════════════════════════ */
 const Umpire = (() => {
-  const synth = (typeof speechSynthesis !== 'undefined') ? speechSynthesis : null;
-  let vmap = {}, camb = 'roland', lastT = 0, speaking = false, nfr = 0, Q = [];
+  const synth=(typeof speechSynthesis!=='undefined')?speechSynthesis:null;
+  let vmap={},camb='roland',lastT=0,speaking=false,nfr=0,Q=[];
 
-  function _bv(lang) {
-    if (!synth) return null;
-    const vv = synth.getVoices(), l2 = lang.split('-')[0];
-    const sc = v => {
-      const nm = v.name.toLowerCase();
-      return (v.lang===lang?4:v.lang.startsWith(l2)?1:0) +
-             (nm.includes('natural')||nm.includes('neural')||nm.includes('online')?2:0);
-    };
-    const cc = vv.filter(v=>v.lang===lang||v.lang.startsWith(l2));
-    return cc.length ? cc.sort((a,b)=>sc(b)-sc(a))[0] : null;
+  function _bv(lang){
+    if(!synth) return null;
+    const vv=synth.getVoices(),l2=lang.split('-')[0];
+    const sc=v=>{const nm=v.name.toLowerCase();
+      return(v.lang===lang?4:v.lang.startsWith(l2)?1:0)+
+             (nm.includes('natural')||nm.includes('neural')||nm.includes('online')?2:0);};
+    const cc=vv.filter(v=>v.lang===lang||v.lang.startsWith(l2));
+    return cc.length?cc.sort((a,b)=>sc(b)-sc(a))[0]:null;
   }
 
-  function _lv() {
-    if (!synth) return;
-    ['fr-FR','fr-BE','en-GB','en-US'].forEach(l=>{ vmap[l]=_bv(l); });
-    const v = vmap[AMB[camb].lang];
-    D.set('dvoice', v?.name||'défaut', v?'ok':'warn');
+  function _lv(){
+    if(!synth)return;
+    ['fr-FR','fr-BE','en-GB','en-US'].forEach(l=>{vmap[l]=_bv(l);});
+    const v=vmap[AMB[camb].lang];
+    D.log(`Voix: ${v?.name||'défaut'}`,'ok');
   }
-  if (synth && typeof synth.onvoiceschanged !== 'undefined') synth.onvoiceschanged = _lv;
-  setTimeout(_lv, 300); setTimeout(_lv, 1200); setTimeout(_lv, 3500);
+  if(synth&&typeof synth.onvoiceschanged!=='undefined') synth.onvoiceschanged=_lv;
+  setTimeout(_lv,300);setTimeout(_lv,1200);setTimeout(_lv,3500);
 
-  function _speak(text, force=false) {
-    if (!synth) return;
-    const now = Date.now();
-    if (!force && now - lastT < CFG.UMPIRE_MIN_GAP) return;
-    if (speaking) {
-      if (force) { synth.cancel(); Q = []; }
-      else { if (Q.length < 2) Q.push({text,force}); return; }
-    }
-    lastT = now;
-    const lang = AMB[camb].lang;
-    const voice = vmap[lang] || _bv(lang);
-    const cfg = AMB[camb].tts;
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang; u.rate = cfg.rate; u.pitch = cfg.pitch;
-    if (voice) u.voice = voice;
-    u.onstart = () => { speaking = true; _show(text); Synth.duck(true); };
-    u.onend = () => {
-      speaking = false; _hide(); Synth.duck(false);
-      if (Q.length) { const nx=Q.shift(); setTimeout(()=>_speak(nx.text,nx.force),350); }
-    };
-    u.onerror = () => { speaking = false; _hide(); Synth.duck(false); };
-    try { synth.speak(u); } catch(e) { speaking=false; _hide(); }
+  function _speak(text,force=false){
+    if(!synth)return;
+    const now=Date.now();
+    if(!force&&now-lastT<7000)return;
+    if(speaking){if(force){synth.cancel();Q=[];}else{if(Q.length<2)Q.push({text,force});return;}}
+    lastT=now;
+    const lang=AMB[camb].lang,voice=vmap[lang]||_bv(lang),cfg=AMB[camb].tts;
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=lang;u.rate=cfg.rate;u.pitch=cfg.pitch;
+    if(voice)u.voice=voice;
+    u.onstart=()=>{speaking=true;_show(text);Synth.duck(true);};
+    u.onend=()=>{speaking=false;_hide();Synth.duck(false);if(Q.length){const nx=Q.shift();setTimeout(()=>_speak(nx.text,nx.force),350);}};
+    u.onerror=()=>{speaking=false;_hide();Synth.duck(false);};
+    try{synth.speak(u);}catch(e){speaking=false;_hide();}
   }
 
-  function _show(t) { const e=document.getElementById('uov'); if(e){e.textContent=t;e.classList.add('vis');} }
-  function _hide() { document.getElementById('uov')?.classList.remove('vis'); }
+  function _show(t){const e=document.getElementById('uov');if(e){e.textContent=t;e.classList.add('vis');}}
+  function _hide(){document.getElementById('uov')?.classList.remove('vis');}
 
-  /* ── Score announcements — called after every point ── */
-  function announceScore(ev) {
-    if (!CFG.SCORE_ON) return;
-    const st = Score.getState();
-    const n1=st.p1, n2=st.p2, a=AMB[camb];
-    const fr = a.lang.startsWith('fr');
+  // Announce score after EVERY point
+  function announceScore(ev){
+    if(!CFG.SCORE_ON)return;
+    const st=Score.getState(),a=AMB[camb],fr=a.lang.startsWith('fr');
+    const n1=st.p1,n2=st.p2;
 
-    if (ev.matchWon) {
-      const w = ev.player===1?n1:n2;
-      _speak(fr?`Jeu, set et match, ${w}.`:`Game, set and match, ${w}.`, true);
-      return;
+    if(ev.matchWon){
+      _speak(fr?`Jeu, set et match, ${ev.player===1?n1:n2}.`:`Game, set and match, ${ev.player===1?n1:n2}.`,true);return;
     }
-    if (ev.newballs) {
-      setTimeout(()=>_speak(a.newballs, false), 2000);
+    if(ev.newballs) setTimeout(()=>_speak(a.newballs,false),2200);
+    if(ev.setWon){
+      const w=ev.player===1?n1:n2;
+      _speak(fr?`${a.game} et set, ${w}. ${ev.setScoreStr}.`:`${a.game} and set, ${w}. ${ev.setScoreStr}.`,true);return;
     }
-    if (ev.setWon) {
-      const w = ev.player===1?n1:n2;
-      const sc = ev.setScoreStr;
-      _speak(fr?`${a.game}, et set, ${w}. ${sc}.`:`${a.game} and set, ${w}. ${sc}.`, true);
-      return;
+    if(ev.gameWon){
+      const w=ev.player===1?n1:n2;
+      _speak(fr?`${a.game}, ${w}. ${ev.scoreStr}.`:`${a.game}, ${w}. ${ev.scoreStr}.`,false);return;
     }
-    if (ev.gameWon) {
-      const w = ev.player===1?n1:n2;
-      const gsc = ev.scoreStr;
-      _speak(fr?`${a.game}, ${w}. ${gsc}.`:`${a.game}, ${w}. ${gsc}.`, false);
-      return;
+    // Every point: announce score
+    const ds=Score.getDS();
+    if(ev.deuce){_speak(fr?'Égalité.':'Deuce.',false);return;}
+    if(ev.advantage){
+      const who=ev.scoreStr.includes(n1)?n1:n2;
+      _speak(fr?`Avantage, ${who}.`:`Advantage, ${who}.`,false);return;
     }
-    // Point score — announce EVERY point (as real umpires do)
-    const ds = Score.getDS();
-    if (ev.deuce) { _speak(fr?'Égalité.':'Deuce.', false); return; }
-    if (ev.advantage) {
-      _speak(fr?`Avantage, ${ev.scoreStr.includes(n1)?n1:n2}.`:`Advantage, ${ev.scoreStr.includes(n1)?n1:n2}.`, false);
-      return;
-    }
-    // Announce score with server's score first (as per real tennis rules)
-    const srv = st.serving;
-    const s1 = srv===1 ? ds.p1 : ds.p2;
-    const s2 = srv===1 ? ds.p2 : ds.p1;
-    if (G_inTB_compat(ds)) {
-      _speak(`${s1}–${s2}.`, false);
-    } else {
-      _speak(`${s1}–${s2}.`, false);
-    }
+    // Server's score first (tennis convention)
+    const srv=st.serving;
+    const s1=srv===1?ds.p1:ds.p2,s2=srv===1?ds.p2:ds.p1;
+    _speak(`${s1}–${s2}.`,false);
   }
 
-  function G_inTB_compat(ds) { return ds.tb; }
-
-  function announceEvent(type) {
-    const a = AMB[camb], now = Date.now();
-    switch(type) {
-      case 'quiet': if(now-lastT > CFG.UMPIRE_MIN_GAP*1.4) _speak(a.quiet,true); break;
-      case 'let': _speak(a.let_,false); break;
-      case 'fault': if(Math.random()<.35) _speak(a.fault,false); break;
-      case 'time': if(now-lastT > CFG.UMPIRE_MIN_GAP*2) _speak(a.time_,false); break;
-      case 'newballs': _speak(a.newballs,false); break;
-      case 'racket': _speak(a.warn_r,false); break;
-      case 'random': {
-        const fr = a.lang.startsWith('fr');
-        const pool = [a.quiet, a.time_, a.newballs];
-        if (CFG.SCORE_ON) {
-          const ds = Score.getDS();
-          const st = Score.getState();
-          const s1 = st.serving===1?ds.p1:ds.p2, s2 = st.serving===1?ds.p2:ds.p1;
+  function announceEvent(type){
+    const a=AMB[camb],now=Date.now();
+    switch(type){
+      case 'quiet': if(now-lastT>10000)_speak(a.quiet,true);break;
+      case 'let': _speak(a.let_,false);break;
+      case 'fault': if(Math.random()<.35)_speak(a.fault,false);break;
+      case 'time': if(now-lastT>14000)_speak(a.time_,false);break;
+      case 'newballs': _speak(a.newballs,false);break;
+      case 'racket': _speak(a.warn_r,false);break;
+      case 'random':{
+        const fr=a.lang.startsWith('fr');
+        const pool=[a.quiet,a.time_,a.newballs];
+        if(CFG.SCORE_ON){const ds=Score.getDS();const st=Score.getState();
+          const s1=st.serving===1?ds.p1:ds.p2,s2=st.serving===1?ds.p2:ds.p1;
           pool.push(`${s1}–${s2}.`);
-          pool.push(`${st.games[0]}–${st.games[1]}, ${fr?'au jeu':'in games'}.`);
+          pool.push(fr?`${st.games[0]}–${st.games[1]} au jeu.`:`${st.games[0]}–${st.games[1]} in games.`);
         }
-        _speak(pool[Math.floor(Math.random()*pool.length)],false); break;
+        _speak(pool[Math.floor(Math.random()*pool.length)],false);break;
       }
     }
   }
 
-  function trackNoise(noisy) {
-    if (noisy) { nfr++; if(nfr>=CFG.NOISE_WARN_FRAMES){nfr=0;announceEvent('quiet');} }
-    else nfr = Math.max(0, nfr-1);
+  function trackNoise(noisy){
+    if(noisy){nfr++;if(nfr>=200){nfr=0;announceEvent('quiet');}}
+    else nfr=Math.max(0,nfr-1);
   }
 
-  function setAmb(a) { camb=a; _lv(); }
-  function test() { _speak("Quinze partout. Quiet please. S'il vous plaît.", true); }
-
-  return { announceScore, announceEvent, trackNoise, setAmb, test };
+  function setAmb(a){camb=a;_lv();}
+  function test(){_speak("Quinze partout. Quiet please.",true);}
+  return{announceScore,announceEvent,trackNoise,setAmb,test};
 })();
 
 /* ══════════════════════════════════════════════════════════════════════
-   SYNTH — real sounds + procedural fallback + ducking + duration cap
+   SYNTH — real sounds + procedural fallback + ducking + cap
    ══════════════════════════════════════════════════════════════════════ */
 const Synth = (() => {
-  let ctx, mGain, dGain, amb;
-  const bufs = {};
-  let loaded = 0;
-  const activeSrcs = new Set();
+  let ctx,mGain,dGain,amb;
+  const bufs={};
+  let loaded=0;
+  const active=new Set();
 
-  function _pink(sec) {
+  function _pink(sec){
     const sz=Math.floor((ctx?.sampleRate||44100)*sec);
     const b=ctx.createBuffer(2,sz,ctx.sampleRate);
     for(let ch=0;ch<2;ch++){
       const d=b.getChannelData(ch);
       let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
-      for(let i=0;i<sz;i++){
-        const w=(Math.random()*2)-1;
-        b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;
-        b2=.969*b2+w*.153852;b3=.8665*b3+w*.3104856;
-        b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;
-        d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926;
-      }
+      for(let i=0;i<sz;i++){const w=(Math.random()*2)-1;
+        b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;
+        b3=.8665*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;
+        d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926;}
     }
     return b;
   }
 
-  async function _load(name, url) {
-    try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(()=>ctrl.abort(), 12000);
-      const r = await fetch(url, {mode:'cors', signal:ctrl.signal});
+  async function _load(name,url){
+    try{
+      const ctrl=new AbortController();
+      const tid=setTimeout(()=>ctrl.abort(),12000);
+      const r=await fetch(url,{mode:'cors',signal:ctrl.signal});
       clearTimeout(tid);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const ab = await r.arrayBuffer();
-      bufs[name] = await ctx.decodeAudioData(ab);
-      loaded++;
-      D.set('dsounds', `${loaded}/${Object.keys(SURLS).length}`, 'ok');
-      D.log(`Son: ${name}`, 'ok');
-    } catch(e) {
-      D.log(`Son ${name}: ${e.name==='AbortError'?'timeout':e.message}`, 'warn');
-    }
+      if(!r.ok)throw new Error(`HTTP ${r.status}`);
+      const ab=await r.arrayBuffer();
+      bufs[name]=await ctx.decodeAudioData(ab);
+      loaded++;D.log(`Son: ${name}`,'ok');
+    }catch(e){D.log(`Son ${name}: ${e.name==='AbortError'?'timeout':e.message}`,'warn');}
   }
 
-  /* Play buffer with hard duration cap — key feature to avoid long crowd sounds */
-  function _playBuf(name, vol=1, offset=0) {
-    if (!bufs[name] || !ctx) return;
-    const buf = bufs[name];
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    const g = ctx.createGain();
-    const e = AMB[amb].energy;
-    g.gain.setValueAtTime(vol * e, ctx.currentTime + offset);
-    // Fade out well before SOUND_MAX_MS to avoid abrupt cut
-    const maxSec = CFG.SOUND_MAX_MS / 1000;
-    const fadeStart = Math.max(0, maxSec - 0.8);
-    g.gain.setValueAtTime(vol * e, ctx.currentTime + offset + fadeStart);
-    g.gain.linearRampToValueAtTime(0, ctx.currentTime + offset + maxSec);
-    src.connect(g); g.connect(dGain);
-    src.start(ctx.currentTime + offset);
-    src.stop(ctx.currentTime + offset + maxSec + 0.05);
-    activeSrcs.add(src);
-    src.onended = () => activeSrcs.delete(src);
+  // Play with hard duration cap + fade out
+  function _play(name,vol=1,offset=0){
+    if(!bufs[name]||!ctx)return;
+    const src=ctx.createBufferSource();src.buffer=bufs[name];
+    const g=ctx.createGain(),e=AMB[amb].energy;
+    const maxS=SOUND_MAX/1000,fadeS=Math.max(0,maxS-.8);
+    g.gain.setValueAtTime(vol*e,ctx.currentTime+offset);
+    g.gain.setValueAtTime(vol*e,ctx.currentTime+offset+fadeS);
+    g.gain.linearRampToValueAtTime(0,ctx.currentTime+offset+maxS);
+    src.connect(g);g.connect(dGain);
+    src.start(ctx.currentTime+offset);src.stop(ctx.currentTime+offset+maxS+.05);
+    active.add(src);src.onended=()=>active.delete(src);
   }
 
-  function duck(active) {
-    if (!dGain) return;
-    const t = ctx.currentTime;
-    dGain.gain.cancelScheduledValues(t);
-    dGain.gain.setValueAtTime(dGain.gain.value, t);
-    dGain.gain.linearRampToValueAtTime(active ? .55 : 1.0, t + .4);
+  function duck(on){
+    if(!dGain)return;const t=ctx.currentTime;
+    dGain.gain.cancelScheduledValues(t);dGain.gain.setValueAtTime(dGain.gain.value,t);
+    dGain.gain.linearRampToValueAtTime(on?.55:1.0,t+.38);
   }
 
-  /* Procedural fallbacks (also capped) */
-  function _clap(t, vol) {
-    const dur=.035+Math.random()*.025, sz=Math.floor(ctx.sampleRate*dur);
-    const b=ctx.createBuffer(1,sz,ctx.sampleRate), d=b.getChannelData(0);
-    for(let i=0;i<sz;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/sz,1.5);
-    const s=ctx.createBufferSource(); s.buffer=b;
-    const hpf=ctx.createBiquadFilter(); hpf.type='highpass'; hpf.frequency.value=900+Math.random()*1100;
-    const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+dur+.05);
-    s.connect(hpf); hpf.connect(g); g.connect(dGain); s.start(t); s.stop(t+dur+.12);
+  function _clap(t,vol){
+    const dur=.032+Math.random()*.025,sz=Math.floor(ctx.sampleRate*dur);
+    const b=ctx.createBuffer(1,sz,ctx.sampleRate),d=b.getChannelData(0);
+    for(let i=0;i<sz;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/sz,1.5);
+    const s=ctx.createBufferSource();s.buffer=b;
+    const hpf=ctx.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=900+Math.random()*1000;
+    const g=ctx.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur+.05);
+    s.connect(hpf);hpf.connect(g);g.connect(dGain);s.start(t);s.stop(t+dur+.1);
   }
 
-  function _applause(intensity, dur) {
-    const e=AMB[amb].energy, t0=ctx.currentTime;
-    const rate=5+intensity*22, n=Math.floor(rate*dur);
-    for(let i=0;i<n;i++) _clap(t0+(i/rate)+(Math.random()-.5)*.04,(Math.random()*.45+.25)*intensity*e);
+  function _appl(intensity,dur){
+    const e=AMB[amb].energy,t0=ctx.currentTime,rate=5+intensity*20,n=Math.floor(rate*dur);
+    for(let i=0;i<n;i++)_clap(t0+(i/rate)+(Math.random()-.5)*.04,(Math.random()*.4+.25)*intensity*e);
   }
 
-  function _murmur(intensity, dur) {
-    const e=AMB[amb].energy, t0=ctx.currentTime;
+  function _murmur(intensity,dur){
+    const e=AMB[amb].energy,t0=ctx.currentTime;
     for(let i=0;i<3+Math.floor(intensity*3);i++){
-      const f=200+Math.random()*380;
-      const osc=ctx.createOscillator(), vib=ctx.createOscillator();
-      const vg=ctx.createGain(), g=ctx.createGain(), bpf=ctx.createBiquadFilter();
-      osc.type='sawtooth'; osc.frequency.value=f+(Math.random()-.5)*35;
-      vib.type='sine'; vib.frequency.value=4+Math.random()*3; vg.gain.value=3;
-      vib.connect(vg); vg.connect(osc.frequency);
-      bpf.type='bandpass'; bpf.frequency.value=650+Math.random()*550; bpf.Q.value=2;
-      const vol=(.018+Math.random()*.035)*intensity*e, ti=t0+i*.05;
-      g.gain.setValueAtTime(0,ti); g.gain.linearRampToValueAtTime(vol,ti+.18);
-      // Fade out before duration cap
-      g.gain.linearRampToValueAtTime(0.0001, t0+dur-.15);
-      osc.connect(bpf); bpf.connect(g); g.connect(dGain);
-      osc.start(ti); osc.stop(t0+dur); vib.start(ti); vib.stop(t0+dur);
+      const f=200+Math.random()*350;
+      const osc=ctx.createOscillator(),vib=ctx.createOscillator();
+      const vg=ctx.createGain(),g=ctx.createGain(),bpf=ctx.createBiquadFilter();
+      osc.type='sawtooth';osc.frequency.value=f+(Math.random()-.5)*30;
+      vib.type='sine';vib.frequency.value=4+Math.random()*3;vg.gain.value=3;
+      vib.connect(vg);vg.connect(osc.frequency);
+      bpf.type='bandpass';bpf.frequency.value=650+Math.random()*500;bpf.Q.value=2;
+      const vol=(.016+Math.random()*.03)*intensity*e,ti=t0+i*.05;
+      g.gain.setValueAtTime(0,ti);g.gain.linearRampToValueAtTime(vol,ti+.16);
+      g.gain.linearRampToValueAtTime(.0001,t0+dur-.12);
+      osc.connect(bpf);bpf.connect(g);g.connect(dGain);
+      osc.start(ti);osc.stop(t0+dur);vib.start(ti);vib.stop(t0+dur);
     }
   }
 
-  function _sigh(dir) {
-    const e=AMB[amb].energy, t0=ctx.currentTime;
+  function _sigh(dir){
+    const e=AMB[amb].energy,t0=ctx.currentTime;
     for(let i=0;i<10+Math.floor(Math.random()*4);i++){
-      const bf=dir==='up'?270+Math.random()*110:210+Math.random()*70;
-      const ef=dir==='up'?bf+55+Math.random()*35:bf-35-Math.random()*25;
-      const osc=ctx.createOscillator(), g=ctx.createGain(), bpf=ctx.createBiquadFilter();
-      osc.type='sine'; osc.frequency.setValueAtTime(bf,t0+i*.01);
-      osc.frequency.linearRampToValueAtTime(ef,t0+.35+i*.01);
-      bpf.type='bandpass'; bpf.frequency.value=580; bpf.Q.value=1.4;
-      const vol=(.013+Math.random()*.022)*e*(dir==='up'?.9:.7);
-      g.gain.setValueAtTime(0,t0+i*.01); g.gain.linearRampToValueAtTime(vol,t0+i*.01+.07);
-      g.gain.exponentialRampToValueAtTime(.0001,t0+.75+i*.01);
-      osc.connect(bpf); bpf.connect(g); g.connect(dGain); osc.start(t0+i*.01); osc.stop(t0+1.1);
+      const bf=dir==='up'?265+Math.random()*105:210+Math.random()*65;
+      const ef=dir==='up'?bf+50+Math.random()*32:bf-32-Math.random()*22;
+      const osc=ctx.createOscillator(),g=ctx.createGain(),bpf=ctx.createBiquadFilter();
+      osc.type='sine';osc.frequency.setValueAtTime(bf,t0+i*.01);
+      osc.frequency.linearRampToValueAtTime(ef,t0+.32+i*.01);
+      bpf.type='bandpass';bpf.frequency.value=560;bpf.Q.value=1.3;
+      const vol=(.012+Math.random()*.02)*e*(dir==='up'?.9:.7);
+      g.gain.setValueAtTime(0,t0+i*.01);g.gain.linearRampToValueAtTime(vol,t0+i*.01+.07);
+      g.gain.exponentialRampToValueAtTime(.0001,t0+.7+i*.01);
+      osc.connect(bpf);bpf.connect(g);g.connect(dGain);osc.start(t0+i*.01);osc.stop(t0+1.0);
     }
   }
 
-  /* All reactions capped at SOUND_MAX_MS */
-  function react(type, params={}) {
-    if (!ctx||!mGain) return;
-    const delay = AMB[amb].delay;
-    const CAP = CFG.SOUND_MAX_MS / 1000; // max duration in seconds
+  const CAP=SOUND_MAX/1000;
 
-    switch(type) {
+  function react(type){
+    if(!ctx||!mGain)return;
+    const dl=AMB[amb].delay;
+    switch(type){
       case 'rally_short':
-        bufs.amb_chat ? _playBuf('amb_chat',.38) : _murmur(.3, Math.min(CAP,.8));
-        break;
+        bufs.amb_chat?_play('amb_chat',.38):_murmur(.3,Math.min(CAP,.8));break;
       case 'rally_medium':
-        bufs.appl_soft ? _playBuf('appl_soft',.55) : _murmur(.45, Math.min(CAP,1.2));
-        if (bufs.amb_light) _playBuf('amb_light',.28,.3);
-        else if (!bufs.appl_soft) _applause(.28, Math.min(CAP,.8));
-        break;
+        bufs.appl_soft?_play('appl_soft',.55):_murmur(.45,Math.min(CAP,1.2));
+        if(bufs.amb_light)_play('amb_light',.26,.3);break;
       case 'rally_long':
-        bufs.appl_med ? _playBuf('appl_med',.65) : _murmur(.62, Math.min(CAP,1.5));
-        break;
+        bufs.appl_med?_play('appl_med',.65):_murmur(.6,Math.min(CAP,1.5));break;
       case 'rally_epic':
-        bufs.ovation_soft ? _playBuf('ovation_soft',.72) : _applause(.72, CAP);
-        _murmur(.45, Math.min(CAP,1.8));
-        break;
+        bufs.ovation_soft?_play('ovation_soft',.72):_appl(.7,CAP);
+        _murmur(.4,Math.min(CAP,1.8));break;
       case 'point_winner':
-        setTimeout(()=>{
-          bufs.ovation_strong ? _playBuf('ovation_strong',.8) : _applause(.8, CAP);
-          _murmur(.42, Math.min(CAP,2));
-          setLevel(.82,.28);
-        }, delay*.5);
-        break;
+        setTimeout(()=>{bufs.ovation_strong?_play('ovation_strong',.8):_appl(.8,CAP);
+          _murmur(.4,Math.min(CAP,2));setLevel(.82,.28);},dl*.5);break;
       case 'point_epic':
-        setTimeout(()=>{
-          bufs.ovation_epic ? _playBuf('ovation_epic',.9) : _applause(.9, CAP);
-          _murmur(.55, CAP);
-          setLevel(.9,.25);
-        }, delay*.3);
-        break;
+        setTimeout(()=>{bufs.ovation_epic?_play('ovation_epic',.9):_appl(.9,CAP);
+          _murmur(.52,CAP);setLevel(.9,.22);},dl*.3);break;
       case 'point_clean':
         _sigh('up');
-        setTimeout(()=>{
-          bufs.appl_cheer ? _playBuf('appl_cheer',.62) : _applause(.62, CAP);
-          setLevel(.68,.38);
-        }, delay);
-        break;
+        setTimeout(()=>{bufs.appl_cheer?_play('appl_cheer',.62):_appl(.62,CAP);setLevel(.68,.36);},dl);break;
       case 'point_error':
-        bufs.sigh_sad ? _playBuf('sigh_sad',.75) : _sigh('down');
-        setTimeout(()=>{ bufs.amb_quiet?_playBuf('amb_quiet',.28):_murmur(.28,Math.min(CAP,1.2));},450);
-        break;
+        bufs.sigh_sad?_play('sigh_sad',.75):_sigh('down');
+        setTimeout(()=>{bufs.amb_quiet?_play('amb_quiet',.26):_murmur(.26,Math.min(CAP,1.1));},420);break;
       case 'let':
-        _sigh('up');
-        setTimeout(()=>{ bufs.amb_chat?_playBuf('amb_chat',.28):_murmur(.2,Math.min(CAP,.7));},280);
-        break;
+        _sigh('up');setTimeout(()=>{bufs.amb_chat?_play('amb_chat',.26):_murmur(.2,Math.min(CAP,.7));},260);break;
       case 'voice_celeb':
-        setTimeout(()=>{
-          bufs.ovation_medium ? _playBuf('ovation_medium',.6) : _applause(.6, CAP);
-        }, delay*.7);
-        break;
+        setTimeout(()=>{bufs.ovation_medium?_play('ovation_medium',.6):_appl(.6,CAP);},dl*.7);break;
       case 'voice_frust':
-        bufs.amb_quiet?_playBuf('amb_quiet',.24):_murmur(.24,Math.min(CAP,.9));
-        break;
+        bufs.amb_quiet?_play('amb_quiet',.22):_murmur(.22,Math.min(CAP,.8));break;
       case 'pulse':
-        if (AMB[amb].energy>.6) _clap(ctx.currentTime+.05, .09*AMB[amb].energy);
-        break;
-      case 'accel':
-        _murmur(.65, Math.min(CAP,.7));
-        break;
-      case 'random': {
-        const pool=['rally_medium','rally_long','point_winner','point_clean','voice_celeb','rally_epic','point_error'];
-        react(pool[Math.floor(Math.random()*pool.length)]);
-        break;
+        if(AMB[amb].energy>.6)_clap(ctx.currentTime+.05,.09*AMB[amb].energy);break;
+      case 'accel': _murmur(.6,Math.min(CAP,.65));break;
+      case 'random':{
+        const p=['rally_medium','rally_long','point_winner','point_clean','voice_celeb','rally_epic','point_error'];
+        react(p[Math.floor(Math.random()*p.length)]);break;
       }
     }
   }
 
-  function setLevel(level, ramp) {
-    if(!mGain) return;
+  function setLevel(level,ramp){
+    if(!mGain)return;
     const gain=Math.pow(Math.max(0,Math.min(1,level)),1.4)*.78+.04;
-    mGain.gain.linearRampToValueAtTime(gain, ctx.currentTime+(ramp||.3));
+    mGain.gain.linearRampToValueAtTime(gain,ctx.currentTime+(ramp||.3));
   }
 
-  function init(audioCtx, amb) {
-    ctx=audioCtx; amb=amb;
-    mGain=ctx.createGain(); mGain.gain.value=.06;
-    dGain=ctx.createGain(); dGain.gain.value=1;
-    mGain.connect(dGain); dGain.connect(ctx.destination);
-    // Ambient bed (looping pink noise filtered)
-    const src=ctx.createBufferSource(); src.buffer=_pink(4); src.loop=true;
-    const bpf=ctx.createBiquadFilter(); bpf.type='bandpass'; bpf.frequency.value=850; bpf.Q.value=.55;
-    const ls=ctx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.value=280; ls.gain.value=7;
-    const g=ctx.createGain(); g.gain.value=.11;
-    src.connect(bpf); bpf.connect(ls); ls.connect(g); g.connect(dGain); src.start();
-    D.set('dsounds','0/'+Object.keys(SURLS).length,'warn');
+  function init(audioCtx,ambianceName){
+    ctx=audioCtx;amb=ambianceName;
+    mGain=ctx.createGain();mGain.gain.value=.06;
+    dGain=ctx.createGain();dGain.gain.value=1;
+    mGain.connect(dGain);dGain.connect(ctx.destination);
+    // No ambient bed — removed per user request
     Object.entries(SURLS).forEach(([n,u])=>_load(n,u));
   }
 
-  function setAmb(a) { amb=a; }
-  function testBeep() {
-    if(!ctx) return;
-    const o=ctx.createOscillator(), g=ctx.createGain();
-    o.frequency.value=440; g.gain.setValueAtTime(.28,ctx.currentTime);
+  function setAmb(a){amb=a;}
+  function testBeep(){
+    if(!ctx)return;
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.frequency.value=440;g.gain.setValueAtTime(.28,ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.5);
-    o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+.5);
+    o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.5);
   }
-  function stop() {
-    activeSrcs.forEach(s=>{try{s.stop();}catch(e){}});
-    if(mGain) mGain.gain.linearRampToValueAtTime(0,(ctx?.currentTime||0)+.5);
-  }
-
-  return { init, react, setLevel, setAmb, duck, testBeep, stop };
+  function stop(){active.forEach(s=>{try{s.stop();}catch(e){}});
+    if(mGain)mGain.gain.linearRampToValueAtTime(0,(ctx?.currentTime||0)+.5);}
+  return{init,react,setLevel,setAmb,duck,testBeep,stop};
 })();
 
 /* ══════════════════════════════════════════════════════════════════════
-   DETECTOR — multi-feature + leisure tennis stats layer
+   DETECTOR v6 — YAMNet primary + heuristic fallback
    ══════════════════════════════════════════════════════════════════════ */
 const Detector = (() => {
-  function rms(b){let s=0;for(let i=0;i<b.length;i++)s+=b[i]*b[i];return Math.sqrt(s/b.length);}
-  function zcr(b){let c=0;for(let i=1;i<b.length;i++)if((b[i]>=0)!==(b[i-1]>=0))c++;return c/b.length;}
-  function centroid(fq,sr){let n=0,d=0;for(let i=0;i<fq.length;i++){const f=i*sr/(fq.length*2);n+=f*fq[i];d+=fq[i];}return d>0?n/d:0;}
+  // YAMNet audio buffer — accumulates 16kHz samples
+  const YAMNET_SR = 16000;
+  const YAMNET_WIN = YAMNET_SR * 0.96; // 0.96s window
+  const YAMNET_HOP = YAMNET_SR * 0.48; // 50% overlap
+  let yamBuf = new Float32Array(YAMNET_WIN);
+  let yamPos = 0;
+  let yamTimer = null;
+  let lastYamScores = null;
 
-  const T = {
-    rc:0, lastOnset:0, onsets:[], iois:[],
-    lastSilStart:0, inSil:true,
+  // Heuristic state
+  const H = {
+    rc:0,lastOnset:0,onsets:[],iois:[],
+    lastSilStart:0,inSil:true,
     vbuf:{active:false,start:0,zcr:0,rms:0},
-    lastEvT:0, evCD:1400,
-    intensity:0, peak:.001,
-    bl:0, blN:0,
-    pRMS:0, ppRMS:0,
+    lastEvT:0,evCD:1200,
+    intensity:0,peak:.001,
+    bl:0,blN:0,pRMS:0,ppRMS:0,
     lastOnsetForNet:0,
-    // Leisure stats layer
-    observedIOIs: [],  // running IOI histogram
-    adaptiveIOIMin: CFG.IOI_MIN,
-    adaptiveIOIMax: CFG.IOI_MAX,
-    consecutiveHits: 0,
-    lastHitT: 0,
+    // Adaptive IOI
+    obsIOIs:[],adaptMin:400,adaptMax:3000,
+    // YAMNet vote buffer
+    yamVotes:[],  // last N yamnet results
   };
 
-  function _mIOI() {
-    const h=T.iois; if(h.length<2) return 0;
-    const r=h.slice(-6); return r.reduce((a,b)=>a+b,0)/r.length;
-  }
-  function _accel() {
-    const h=T.iois; if(h.length<6) return false;
-    const r3=(h[h.length-1]+h[h.length-2]+h[h.length-3])/3;
-    const e3=(h[h.length-4]+h[h.length-5]+h[h.length-6])/3;
-    return e3>0&&r3<e3*.70;
-  }
-
-  /* ── Leisure stats validation layer ──
-     Checks if a detected onset is plausible given observed game context.
-     Returns a plausibility score 0–1 */
-  function _plausibility(rmsVal, zcrVal, centVal, ioi, now) {
-    let score = 0;
-    const bl = Math.max(T.bl, CFG.SILENCE_GATE);
-
-    // 1. Spectral profile: hits have high centroid + high ZCR
-    if (centVal > CFG.CENTROID_HIT) score += 0.35;
-    else if (centVal > CFG.CENTROID_HIT * 0.7) score += 0.15;
-
-    if (zcrVal >= CFG.ZCR_HIT_MIN && zcrVal <= CFG.ZCR_HIT_MAX) score += 0.25;
-
-    // 2. IOI plausibility for leisure tennis (500ms–2800ms)
-    // Update adaptive IOI range from observed data
-    if (T.observedIOIs.length >= 4) {
-      const sorted = [...T.observedIOIs].sort((a,b)=>a-b);
-      const p10 = sorted[Math.floor(sorted.length * 0.1)];
-      const p90 = sorted[Math.floor(sorted.length * 0.9)];
-      T.adaptiveIOIMin = Math.max(CFG.IOI_MIN, p10 * 0.6);
-      T.adaptiveIOIMax = Math.min(CFG.IOI_MAX, p90 * 1.6);
+  // Resample input buffer to 16kHz for YAMNet
+  function _resampleTo16k(floatBuf, srcSR) {
+    const ratio = srcSR / YAMNET_SR;
+    const outLen = Math.floor(floatBuf.length / ratio);
+    const out = new Float32Array(outLen);
+    for (let i = 0; i < outLen; i++) {
+      const srcIdx = i * ratio;
+      const lo = Math.floor(srcIdx);
+      const hi = Math.min(lo + 1, floatBuf.length - 1);
+      const frac = srcIdx - lo;
+      out[i] = floatBuf[lo] * (1 - frac) + floatBuf[hi] * frac;
     }
-    if (ioi > 0) {
-      if (ioi >= T.adaptiveIOIMin && ioi <= T.adaptiveIOIMax) score += 0.25;
-      else if (ioi >= CFG.IOI_MIN && ioi <= CFG.IOI_MAX) score += 0.10;
-    } else {
-      score += 0.15; // first hit, no IOI yet
-    }
-
-    // 3. Amplitude well above baseline
-    if (rmsVal > bl * 3.0) score += 0.15;
-    else if (rmsVal > bl * 2.0) score += 0.08;
-
-    return Math.min(1, score);
+    return out;
   }
 
-  function process(fb, fqb, now, sr) {
-    const r=rms(fb), z=zcr(fb), cent=centroid(fqb,sr);
+  // Feed resampled samples to YAMNet buffer, run inference when full
+  async function _feedYAMNet(samples16k) {
+    for (let i = 0; i < samples16k.length; i++) {
+      yamBuf[yamPos++ % YAMNET_WIN] = samples16k[i];
+    }
+    if (yamPos >= YAMNET_WIN && yamPos % YAMNET_HOP < samples16k.length) {
+      // Run YAMNet inference
+      const window = yamPos >= YAMNET_WIN
+        ? yamBuf.slice(0)  // full circular buffer
+        : yamBuf.slice(0, yamPos);
+      const raw = await YAMNet.classify(window);
+      if (raw) {
+        const ts = YAMNet.extractTennisScores(raw);
+        lastYamScores = ts;
+        H.yamVotes.push(ts);
+        if (H.yamVotes.length > 4) H.yamVotes.shift();
+        _updateYAMNetUI(ts);
+      }
+    }
+  }
+
+  function _updateYAMNetUI(ts) {
+    const b=document.getElementById('ybadge');
+    if(b){
+      const top=Object.entries(ts).sort((a,b)=>b[1]-a[1])[0];
+      b.textContent=`🧠 ${top[0]}: ${(top[1]*100).toFixed(0)}%`;
+      b.classList.toggle('active',top[1]>.15);
+    }
+    // Update meters
+    const _m=(id,val)=>{const e=document.getElementById(id);if(e)e.style.width=Math.min(100,val*100*2)+'%';};
+    const _v=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=(val*100).toFixed(0)+'%';};
+    _m('mstrike',ts.strike);_v('mstrikev',ts.strike);
+    _m('mvoice',Math.max(ts.voice_pos,ts.voice_neg));_v('mvoicev',ts.voice_pos>ts.voice_neg?'+':'-');
+    _m('mcrowd',ts.crowd);_v('mcrowdv',ts.crowd);
+  }
+
+  // Get averaged YAMNet votes
+  function _avgVotes() {
+    if (!H.yamVotes.length) return null;
+    const keys = Object.keys(H.yamVotes[0]);
+    const avg = {};
+    keys.forEach(k => { avg[k] = H.yamVotes.reduce((s,v)=>s+v[k],0)/H.yamVotes.length; });
+    return avg;
+  }
+
+  function rms(b){let s=0;for(let i=0;i<b.length;i++)s+=b[i]*b[i];return Math.sqrt(s/b.length);}
+  function zcr(b){let c=0;for(let i=1;i<b.length;i++)if((b[i]>=0)!==(b[i-1]>=0))c++;return c/b.length;}
+
+  function process(fb,fqb,now,sr){
+    const r=rms(fb),z=zcr(fb);
     const db=r>0?20*Math.log10(r):-Infinity;
 
     // Calibration
-    if(T.blN < CFG.BL_FRAMES){
-      T.bl=(T.bl*T.blN+r)/(T.blN+1); T.blN++;
-    }
-    const bl = CFG.CAL_BL>0 ? CFG.CAL_BL : Math.max(T.bl, CFG.SILENCE_GATE);
-    T.peak = Math.max(T.peak*.9995, r);
+    if(H.blN<80){H.bl=(H.bl*H.blN+r)/(H.blN+1);H.blN++;}
+    const bl=Math.max(H.bl,.0015);
+    H.peak=Math.max(H.peak*.9995,r);
 
-    // Onset detection
-    const d1=r-T.pRMS, d2=T.pRMS-T.ppRMS;
-    const thr=Math.max(CFG.ONSET_DELTA_MIN, bl*CFG.ONSET_FACTOR);
-    const isPeaky = d1>thr && d1>d2*.35 && r>bl*1.9 && (now-T.lastOnset)>CFG.REFRACT_MS;
+    // Feed YAMNet asynchronously
+    const s16k=_resampleTo16k(fb,sr);
+    _feedYAMNet(s16k); // async, non-blocking
 
-    // IOI for this potential onset
-    const candidateIOI = T.lastOnset > 0 ? now - T.lastOnset : 0;
+    // Get current YAMNet averaged scores
+    const ya=_avgVotes();
 
-    // Multi-feature score
-    let fScore = 0;
-    if (isPeaky) fScore++;
-    if (cent > CFG.CENTROID_HIT) fScore++;
-    if (z >= CFG.ZCR_HIT_MIN && z <= CFG.ZCR_HIT_MAX) fScore++;
+    // Heuristic onset
+    const d1=r-H.pRMS,d2=H.pRMS-H.ppRMS;
+    const thr=Math.max(.006,bl*2.2);
+    const isPeaky=d1>thr&&d1>d2*.18&&r>bl*1.6&&(now-H.lastOnset)>90;
 
-    // Leisure stats plausibility
-    const plaus = _plausibility(r, z, cent, candidateIOI, now);
-
-    // Accept onset if: peaky + at least 1 more feature + plausibility > 0.4
-    const isOnset = isPeaky && fScore >= 2 && plaus >= 0.38;
-
-    if (isOnset) {
-      const ioi = T.lastOnset>0 ? now-T.lastOnset : 0;
-      T.lastOnset=now; T.lastOnsetForNet=now;
-      if (ioi>0 && ioi<3500) {
-        T.iois.push(ioi); if(T.iois.length>20) T.iois.shift();
-        T.observedIOIs.push(ioi); if(T.observedIOIs.length>40) T.observedIOIs.shift();
-      }
-      T.onsets.push(now); T.rc++;
-    }
-    const cut=now-8000;
-    while(T.onsets.length>0&&T.onsets[0]<cut) T.onsets.shift();
-
-    // Net ball detection
-    let netDet=false;
-    if (!isOnset && T.lastOnsetForNet>0) {
-      const tso=now-T.lastOnsetForNet;
-      if (tso>120 && tso<CFG.NET_WIN_MS) {
-        if (cent<CFG.CENTROID_NET && z<.08 && r>bl*1.3) {
-          netDet=true; T.lastOnsetForNet=0;
+    // YAMNet-enhanced onset validation
+    // If YAMNet is ready: require strike score AND not clapping
+    let isOnset=false;
+    if(isPeaky){
+      if(ya){
+        // Accept if: YAMNet sees strike OR bounce AND NOT mainly clapping
+        const isStrike=ya.strike>.08||ya.bounce>.08;
+        const isClap=ya.clapping>ya.strike*1.5; // clapping more likely than strike → reject
+        const isSilence=ya.silence>.5;
+        isOnset=isStrike&&!isClap&&!isSilence;
+        // Fallback: if no YAMNet confidence at all, use heuristic alone
+        if(!isOnset&&ya.strike<.05&&ya.bounce<.05&&ya.clapping<.05){
+          isOnset=isPeaky&&r>bl*2.5; // stricter heuristic-only fallback
         }
+      } else {
+        // No YAMNet — use adjusted heuristic
+        isOnset=isPeaky&&r>bl*2.0;
       }
     }
 
-    // Voice detection
-    const isVoice=z>=CFG.ZCR_V_MIN&&z<=CFG.ZCR_V_MAX&&r>bl*1.7&&cent<2400;
-    let voiceEv=null;
-    if (isVoice) {
-      if (!T.vbuf.active) T.vbuf={active:true,start:now,zcr:z,rms:r};
-      else T.vbuf.rms=Math.max(T.vbuf.rms,r);
-    } else if (T.vbuf.active) {
-      const dur=now-T.vbuf.start;
-      if (dur>=CFG.VOICE_DUR_MIN)
-        voiceEv={type:T.vbuf.zcr>.13?'voice_celeb':'voice_frust',dur};
-      T.vbuf={active:false,start:0,zcr:0,rms:0};
+    if(isOnset){
+      const ioi=H.lastOnset>0?now-H.lastOnset:0;
+      H.lastOnset=now;H.lastOnsetForNet=now;
+      if(ioi>0&&ioi<3500){H.iois.push(ioi);if(H.iois.length>20)H.iois.shift();
+        H.obsIOIs.push(ioi);if(H.obsIOIs.length>40)H.obsIOIs.shift();}
+      H.onsets.push(now);H.rc++;
+    }
+    const cut=now-8000;while(H.onsets.length>0&&H.onsets[0]<cut)H.onsets.shift();
+
+    // Net ball
+    let netDet=false;
+    if(!isOnset&&H.lastOnsetForNet>0){
+      const tso=now-H.lastOnsetForNet;
+      if(tso>120&&tso<500){
+        const netSignal=ya?ya.bounce>.1:false;
+        if(netSignal||r>bl*1.3)netDet=true;H.lastOnsetForNet=0;
+      }
     }
 
-    // Silence detection (longer window for leisure)
-    const isSil=r<bl*1.18;
-    if (isSil) { if(!T.inSil){T.inSil=true;T.lastSilStart=now;} }
-    else T.inSil=false;
-    const silDur=T.inSil?now-T.lastSilStart:0;
+    // Voice detection — use YAMNet if available
+    let voiceEv=null;
+    if(ya){
+      // YAMNet voice detection
+      if(ya.voice_pos>.15&&(now-H.lastEvT)>900){
+        voiceEv={type:'voice_celeb',dur:500};
+      } else if(ya.voice_neg>.15&&(now-H.lastEvT)>900){
+        voiceEv={type:'voice_frust',dur:500};
+      }
+    } else {
+      // Heuristic voice fallback
+      const isVoice=z>=.03&&z<=.28&&r>bl*1.7;
+      if(isVoice){if(!H.vbuf.active)H.vbuf={active:true,start:now,zcr:z,rms:r};
+        else H.vbuf.rms=Math.max(H.vbuf.rms,r);
+      } else if(H.vbuf.active){
+        const dur=now-H.vbuf.start;
+        if(dur>=220)voiceEv={type:H.vbuf.zcr>.13?'voice_celeb':'voice_frust',dur};
+        H.vbuf={active:false,start:0,zcr:0,rms:0};
+      }
+    }
+
+    // Silence
+    const isSil=r<bl*1.15;
+    if(isSil){if(!H.inSil){H.inSil=true;H.lastSilStart=now;}}else H.inSil=false;
+    const silDur=H.inSil?now-H.lastSilStart:0;
 
     // Noise tracking
-    Umpire.trackNoise(r>bl*5&&!isOnset&&!T.inSil);
+    Umpire.trackNoise(r>bl*5&&!isOnset&&!H.inSil);
 
-    const recentOnsets=T.onsets.filter(t=>t>now-3000);
+    const recentOnsets=H.onsets.filter(t=>t>now-3000);
     const rate=recentOnsets.length/3;
-    const avgIOI=_mIOI(), isAccel=_accel();
+    const avgIOI=H.iois.length>1?H.iois.slice(-6).reduce((a,b)=>a+b,0)/Math.min(H.iois.length,6):0;
+    const isAccel=H.iois.length>=6&&((H.iois.slice(-3).reduce((a,b)=>a+b,0)/3)<(H.iois.slice(-6,-3).reduce((a,b)=>a+b,0)/3)*.70);
 
     // Intensity
     let tI=0;
-    if (!T.inSil) {
-      const rf=Math.min(1,T.rc/16), sf=Math.min(1,rate/2.8);
-      const vf=Math.min(1,r/Math.max(T.peak*.5,.01));
-      tI=rf*.45+sf*.35+vf*.2;
+    if(!H.inSil){
+      const rf=Math.min(1,H.rc/16),sf=Math.min(1,rate/2.5);
+      const yf=ya?Math.max(ya.strike,ya.crowd)*.5:0;
+      const vf=Math.min(1,r/Math.max(H.peak*.5,.01));
+      tI=rf*.35+sf*.28+vf*.17+yf*.2;
     }
-    T.intensity=T.intensity*.85+tI*.15;
+    H.intensity=H.intensity*.84+tI*.16;
 
     // State + event
-    let state='silence', event=null;
-    if (T.inSil && silDur>CFG.RALLY_RESET_MS && T.rc>0 && (now-T.lastEvT)>T.evCD) {
-      const rc=T.rc; T.lastEvT=now;
-      if (rc===1)             event={type:'point_winner',count:1};
-      else if(rc<=2&&avgIOI<320) event={type:'point_winner',count:2};
-      else if(rc<=5)          event={type:'point_clean',count:rc};
-      else if(rc<=12)         event={type:'rally_medium',count:rc};
-      else if(rc<=20)         event={type:'rally_long',count:rc};
-      else                    event={type:'rally_epic',count:rc};
-      T.rc=0; T.iois=[]; T.onsets=[]; state='react';
-    } else if (netDet&&(now-T.lastEvT)>900) {
-      event={type:'let'}; state='react'; T.lastEvT=now;
-    } else if (!T.inSil) {
-      const rc=T.rc;
-      if (rc<=1&&rate<.4)  state='murmur';
-      else if(rc<=4)       state='rally';
-      else if(rc<=12)      state=isAccel?'tension':'rally';
-      else if(rc<=20)      state='tension';
-      else                 state='ovation';
-      if (isOnset&&rc>3&&rate>1.0&&(now-T.lastEvT)>700) {
+    let state='silence',event=null;
+    if(H.inSil&&silDur>2500&&H.rc>0&&(now-H.lastEvT)>H.evCD){
+      const rc=H.rc;H.lastEvT=now;
+      if(rc===1)event={type:'point_winner',count:1};
+      else if(rc<=2&&avgIOI<350)event={type:'point_winner',count:2};
+      else if(rc<=5)event={type:'point_clean',count:rc};
+      else if(rc<=12)event={type:'rally_medium',count:rc};
+      else if(rc<=20)event={type:'rally_long',count:rc};
+      else event={type:'rally_epic',count:rc};
+      H.rc=0;H.iois=[];H.onsets=[];state='react';
+    } else if(netDet&&(now-H.lastEvT)>900){
+      event={type:'let'};state='react';H.lastEvT=now;
+    } else if(!H.inSil){
+      const rc=H.rc;
+      // YAMNet crowd boost
+      if(ya&&ya.crowd>.2)state='ovation';
+      else if(rc<=1&&rate<.4)state='murmur';
+      else if(rc<=4)state='rally';
+      else if(rc<=12)state=isAccel?'tension':'rally';
+      else if(rc<=20)state='tension';
+      else state='ovation';
+      if(isOnset&&rc>3&&rate>1.0&&(now-H.lastEvT)>700){
         Synth.react('pulse');
-        if(isAccel){T.lastEvT=now;Synth.react('accel');}
+        if(isAccel){H.lastEvT=now;Synth.react('accel');}
       }
     }
-    if (voiceEv&&(now-T.lastEvT)>900) {
-      T.lastEvT=now; state='react'; event=voiceEv;
-      if(voiceEv.type==='voice_frust'&&voiceEv.dur>1600)
-        setTimeout(()=>Umpire.announceEvent('racket'),1300);
+    if(voiceEv&&(now-H.lastEvT)>900){
+      H.lastEvT=now;state='react';event=voiceEv;
+      if(voiceEv.type==='voice_frust')setTimeout(()=>Umpire.announceEvent('racket'),1300);
     }
-    // Long silence → "time"
-    if (T.inSil && silDur>20000 && (now-T.lastEvT)>16000) {
-      Umpire.announceEvent('time'); T.lastEvT=now;
+    if(H.inSil&&silDur>20000&&(now-H.lastEvT)>16000){Umpire.announceEvent('time');H.lastEvT=now;}
+
+    Synth.setLevel(H.intensity,.26);
+    H.ppRMS=H.pRMS;H.pRMS=r;
+
+    // Visual onset flash
+    if(isOnset){
+      const rf=document.getElementById('rfi');
+      if(rf){rf.style.stroke='#ffffff';setTimeout(()=>{rf.style.stroke=STATES[state]?.ring||'#4a5568';},70);}
     }
 
-    Synth.setLevel(T.intensity, .28);
-    T.ppRMS=T.pRMS; T.pRMS=r;
-
-    return {r,z,db,cent,rate,rc:T.rc,avgIOI,isAccel,
-            silDur,voiceActive:T.vbuf.active,isOnset,netDet,
-            state,event,intensity:T.intensity,bl,plaus};
+    return{r,z,db,rate,rc:H.rc,avgIOI,isAccel,silDur,
+           isOnset,netDet,state,event,intensity:H.intensity,bl,ya};
   }
 
   function reset(){
-    Object.assign(T,{rc:0,lastOnset:0,onsets:[],iois:[],lastSilStart:0,
+    Object.assign(H,{rc:0,lastOnset:0,onsets:[],iois:[],lastSilStart:0,
       inSil:true,vbuf:{active:false,start:0,zcr:0,rms:0},
       lastEvT:0,intensity:0,peak:.001,bl:0,blN:0,pRMS:0,ppRMS:0,
-      lastOnsetForNet:0,observedIOIs:[],adaptiveIOIMin:CFG.IOI_MIN,
-      adaptiveIOIMax:CFG.IOI_MAX});
+      lastOnsetForNet:0,obsIOIs:[],adaptMin:400,adaptMax:3000,yamVotes:[]});
+    yamBuf=new Float32Array(YAMNET_WIN);yamPos=0;lastYamScores=null;
   }
-
-  return { process, reset, _T:T };
+  return{process,reset,_H:H};
 })();
 
 /* ══════════════════════════════════════════════════════════════════════
    VISUALIZER
    ══════════════════════════════════════════════════════════════════════ */
-const Viz = (() => {
-  let cv,cx,raf,an,fqBuf,cI=0,cC='#4a5568';
-  const hist=[];
+const Viz=(() => {
+  let cv,cx,raf,an,fqBuf,cI=0,cC='#4a5568';const hist=[];
   function init(c,a){cv=c;an=a;cx=c.getContext('2d');fqBuf=new Uint8Array(a.frequencyBinCount);_resize();window.addEventListener('resize',_resize);_loop();}
   function _resize(){cv.width=cv.offsetWidth*devicePixelRatio;cv.height=cv.offsetHeight*devicePixelRatio;}
   function update(i,c){cI=i;cC=c;hist.push(i);if(hist.length>80)hist.shift();}
-  function _loop(){
-    raf=requestAnimationFrame(_loop); if(!cx||!an)return;
-    an.getByteFrequencyData(fqBuf);
-    const W=cv.width,H=cv.height; cx.clearRect(0,0,W,H);
+  function _loop(){raf=requestAnimationFrame(_loop);if(!cx||!an)return;
+    an.getByteFrequencyData(fqBuf);const W=cv.width,H=cv.height;cx.clearRect(0,0,W,H);
     const mb=Math.floor(fqBuf.length/2.5),bw=W/mb;
     for(let i=0;i<mb;i++){const v=fqBuf[i]/255,h=v*H*.34*(0.5+cI*.5);
-      cx.fillStyle=`hsla(${120+i/mb*80},70%,55%,${.1+v*.36})`; cx.fillRect(i*bw,H-h,Math.max(1,bw-1),h);}
-    if(hist.length>2){cx.beginPath();cx.strokeStyle=cC;cx.lineWidth=2*devicePixelRatio;cx.globalAlpha=.58;
-      const step=W/79; hist.forEach((v,i)=>{const x=i*step,y=H*.5-v*H*.24;i===0?cx.moveTo(x,y):cx.lineTo(x,y);});
+      cx.fillStyle=`hsla(${120+i/mb*80},70%,55%,${.1+v*.34})`;cx.fillRect(i*bw,H-h,Math.max(1,bw-1),h);}
+    if(hist.length>2){cx.beginPath();cx.strokeStyle=cC;cx.lineWidth=2*devicePixelRatio;cx.globalAlpha=.56;
+      const step=W/79;hist.forEach((v,i)=>{const x=i*step,y=H*.5-v*H*.23;i===0?cx.moveTo(x,y):cx.lineTo(x,y);});
       cx.stroke();cx.globalAlpha=1;}
   }
   function stop(){if(raf)cancelAnimationFrame(raf);window.removeEventListener('resize',_resize);}
@@ -1264,428 +1143,284 @@ const Viz = (() => {
 /* ══════════════════════════════════════════════════════════════════════
    DIAGNOSTIC
    ══════════════════════════════════════════════════════════════════════ */
-const D = (() => {
+const D=(() => {
   function log(msg,lv='info'){
-    (lv==='err'?console.error:lv==='warn'?console.warn:console.log)(`[CC5] ${msg}`);
-    const el=document.getElementById('dlog'); if(!el)return;
-    const t=new Date().toISOString().slice(11,19);
-    const r=document.createElement('div'); r.className='dle';
-    r.innerHTML=`<span class="dlt">${t}</span><span class="dlm ${lv}">${msg}</span>`;
-    el.appendChild(r); el.scrollTop=el.scrollHeight;
+    (lv==='err'?console.error:lv==='warn'?console.warn:console.log)(`[CC6] ${msg}`);
   }
-  function set(id,val,lv=''){
-    const el=document.getElementById(id); if(!el)return;
-    el.textContent=val; el.className=`dv${lv?' '+lv:''}`;
-  }
+  function set(id,val,lv=''){const el=document.getElementById(id);if(!el)return;el.textContent=val;}
   return{log,set};
 })();
 
 /* ══════════════════════════════════════════════════════════════════════
-   UI
+   CFG
    ══════════════════════════════════════════════════════════════════════ */
-const UI = (() => {
-  const IDS=['si','sc','ssu','sp','sd','sm'];
-  let logE=[];
-
-  function show(n){ IDS.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('hidden',id!==n);}); }
-
-  function updateState(state,intensity,m){
-    const def=STATES[state]||STATES.silence;
-    const sl=document.getElementById('stlbl'), ss=document.getElementById('stsub');
-    if(sl){sl.textContent=def.label;sl.style.color=def.color;}
-    if(ss) ss.textContent=def.sub;
-    const glows={silence:'transparent',murmur:'rgba(56,178,232,.07)',rally:'rgba(245,166,35,.10)',
-                 tension:'rgba(245,166,35,.16)',react:'rgba(255,68,85,.16)',ovation:'rgba(200,245,58,.18)'};
-    const gw=document.getElementById('glow');
-    if(gw) gw.style.background=`radial-gradient(ellipse 60% 50% at 50% 60%, ${glows[state]||'transparent'} 0%, transparent 70%)`;
-    const rf=document.getElementById('rfi'), rp=document.getElementById('rpct');
-    if(rf){rf.style.strokeDashoffset=CFG.CIRC-(intensity*CFG.CIRC);rf.style.stroke=def.ring;}
-    if(rp){rp.textContent=Math.round(intensity*100);rp.style.color=def.color;}
-    if(m){
-      _m('mvol','mvv',Math.min(100,(m.r/.3)*100),isFinite(m.db)?m.db.toFixed(1)+'dB':'–∞');
-      _m('mcent','mcentv',Math.min(100,(m.cent/4000)*100),Math.round(m.cent)+'Hz');
-      _m('mrally','mrallyv',Math.min(100,(m.rc/22)*100),m.rc+' coups');
-      _m('mraw','mrawv',Math.min(100,(m.r/Math.max(Detector._T.peak,.001))*100),m.r.toFixed(4));
-      const dmb=document.getElementById('dmbar');if(dmb)dmb.style.width=Math.min(100,(m.r/.2)*100)+'%';
-      const dr=document.getElementById('drms');if(dr){dr.textContent=m.r.toFixed(5);dr.className='dv '+(m.r>.001?'ok':m.r>.0001?'warn':'err');}
-      D.set('dbase',m.bl.toFixed(5),m.bl>0?'ok':'warn');
-    }
-    if(state==='ovation'||state==='react') if(Math.random()<.28) _pt(def.color);
-    return def.ring;
-  }
-
-  function _m(bid,vid,pct,txt){
-    const b=document.getElementById(bid),v=document.getElementById(vid);
-    if(b)b.style.width=pct+'%'; if(v)v.textContent=txt;
-  }
-
-  function updateScore(){
-    if(!CFG.SCORE_ON) return;
-    const st=Score.getState(), ds=Score.getDS();
-    const $=id=>document.getElementById(id);
-    const set=(id,val)=>{const e=$(id);if(e)e.textContent=val;};
-    set('sn1',st.p1); set('sn2',st.p2);
-    // Point display
-    set('sp1p', st.serving===1 ? ds.p1 : ds.p2);
-    set('sp2p', st.serving===1 ? ds.p2 : ds.p1);
-    // Wait — actually display by player, not by server
-    set('sp1p', ds.p1); set('sp2p', ds.p2);
-    set('sg1',st.games[0]); set('sg2',st.games[1]);
-    const d1=$('sd1'),d2=$('sd2');
-    if(d1)d1.classList.toggle('srv',st.serving===1);
-    if(d2)d2.classList.toggle('srv',st.serving===2);
-    _renderSets('ss1',st.sets,0); _renderSets('ss2',st.sets,1);
-    set('ssetlbl', st.inTB ? 'TIE-BREAK' : `SET ${st.set}`);
-    const b1=$('bp1'),b2=$('bp2');
-    if(b1)b1.textContent=`Point ${st.p1}`; if(b2)b2.textContent=`Point ${st.p2}`;
-  }
-
-  function _renderSets(id,sets,pi){
-    const el=document.getElementById(id); if(!el)return; el.innerHTML='';
-    const st=Score.getState();
-    sets.forEach((s,i)=>{
-      const sp=document.createElement('span'); sp.className='sset';
-      const myG=pi===0?s.g1:s.g2, opG=pi===0?s.g2:s.g1;
-      if(myG>opG) sp.classList.add('won');
-      sp.textContent=String(myG); el.appendChild(sp);
-    });
-  }
-
-  function logEvent(type,count){
-    const now=new Date(), t=`${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-    const map={
-      point_winner:{ev:'ACE/WINNER',d:'coup direct'},
-      point_clean:{ev:'POINT',d:`${count||0} coups`},
-      rally_medium:{ev:'RALLYE',d:`${count||0} frappes`},
-      rally_long:{ev:'LONG RALLYE',d:`${count||0} frappes`},
-      rally_epic:{ev:'ÉPIQUE !',d:`${count||0}+ frappes`},
-      voice_celeb:{ev:'JOUEUR',d:'victoire'},
-      voice_frust:{ev:'JOUEUR',d:'frustration'},
-      let:{ev:'LET',d:'balle filet'},
-    };
-    const l=map[type]||{ev:type.toUpperCase(),d:''};
-    const e=document.createElement('div'); e.className='le';
-    e.innerHTML=`<span class="lt">${t}</span><span class="lev">${l.ev}</span><span class="ld">${l.d}</span>`;
-    document.getElementById('elog')?.appendChild(e);
-    logE.push(e); if(logE.length>4) logE.shift().remove();
-  }
-
-  function _pt(color){
-    const p=document.createElement('div'); p.className='pt';
-    const x=20+Math.random()*60,y=40+Math.random()*50,sz=3+Math.random()*5,dur=.7+Math.random()*.7;
-    p.style.cssText=`left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;background:${color};animation-duration:${dur}s`;
-    document.getElementById('pw')?.appendChild(p); setTimeout(()=>p.remove(),dur*1000+100);
-  }
-
-  function setAmbLbl(n){const e=document.getElementById('tamb');if(e)e.textContent=AMB[n]?.label||n;}
-  function showPermErr(msg){const e=document.getElementById('perr');if(e)e.textContent=msg;show('sp');}
-
-  return{show,updateState,updateScore,logEvent,setAmbLbl,showPermErr};
-})();
-
-/* ══════════════════════════════════════════════════════════════════════
-   CALIBRATION
-   ══════════════════════════════════════════════════════════════════════ */
-const Cal = (() => {
-  let tmr=null,ph='silence',sF=0,hPk=[],silBl=0;
-  let cCtx=null,cStr=null,cAn=null,cBuf=null;
-
-  async function start(){
-    cCtx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:44100});
-    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-    cStr=stream;
-    const src=cCtx.createMediaStreamSource(stream);
-    cAn=cCtx.createAnalyser(); cAn.fftSize=2048;
-    cBuf=new Float32Array(cAn.fftSize);
-    const sg=cCtx.createGain(); sg.gain.value=0; cAn.connect(sg); sg.connect(cCtx.destination);
-    src.connect(cAn);
-    if(cCtx.state==='suspended') await cCtx.resume();
-    _ph('silence'); tmr=setInterval(_tick,40);
-  }
-
-  function _tick(){
-    cAn.getFloatTimeDomainData(cBuf);
-    let s=0; for(let i=0;i<cBuf.length;i++) s+=cBuf[i]*cBuf[i];
-    const r=Math.sqrt(s/cBuf.length);
-    const mc=document.getElementById('cmic'), rv=document.getElementById('crmsv');
-    if(mc)mc.style.width=Math.min(100,(r/.18)*100)+'%'; if(rv)rv.textContent=r.toFixed(4);
-    if(ph==='silence'){
-      sF++; silBl=(silBl*(sF-1)+r)/sF;
-      const pct=Math.min(100,(sF/75)*100);
-      const cb=document.getElementById('cbar'); if(cb)cb.style.width=pct+'%';
-      const cs=document.getElementById('cstat'); if(cs)cs.textContent=`Mesure silence… ${Math.round(pct)}%`;
-      if(sF>=75) _ph('hit');
-    } else if(ph==='hit'){
-      if(r>silBl*3.5){
-        hPk.push(r);
-        const cs=document.getElementById('cstat'); if(cs)cs.textContent=`Frappe ${hPk.length}/3 ✓`;
-        if(hPk.length>=3) _ph('done');
-      }
-    }
-  }
-
-  function _ph(p){
-    ph=p;
-    const cp=document.getElementById('cph'),cd=document.getElementById('cdc');
-    if(p==='silence'){if(cp)cp.textContent='SILENCE';if(cd)cd.textContent='Silence complet — 3 secondes immobile';}
-    else if(p==='hit'){if(cp)cp.textContent='FRAPPES';if(cd)cd.textContent='Frappe 3 fois dans les mains';const cb=document.getElementById('cbar');if(cb)cb.style.width='0%';}
-    else if(p==='done'){
-      clearInterval(tmr);
-      CFG.CAL_BL=silBl*1.35; CFG.CALIBRATED=true;
-      const cs=document.getElementById('cstat'); if(cs)cs.textContent=`Calibré ✓ bl=${silBl.toFixed(4)}`;
-      if(cp)cp.textContent='PRÊT ✓';
-      document.getElementById('bcdone')?.classList.remove('hidden');
-      D.log(`Cal OK bl=${silBl.toFixed(5)}`,'ok');
-    }
-  }
-
-  function stop(){clearInterval(tmr);cStr?.getTracks().forEach(t=>t.stop());cCtx?.close();}
-  return{start,stop};
-})();
+const CFG={SCORE_ON:false};
 
 /* ══════════════════════════════════════════════════════════════════════
    SESSION
    ══════════════════════════════════════════════════════════════════════ */
-let audioCtx=null, analyserNode=null, micStream=null, analysisTimer=null;
-let floatBuf=null, freqBuf=null;
-let selAmb='roland', zeroCount=0;
+let audioCtx=null,analyserNode=null,micStream=null,analysisTimer=null;
+let floatBuf=null,freqBuf=null,selAmb='roland',zeroCount=0;
 
 async function startSession(){
   D.log('startSession()','info');
+  // AudioContext should already exist from button gesture
   if(!audioCtx){
-    try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:44100}); }
-    catch(e){alert(`AudioContext: ${e.message}`);return;}
+    try{audioCtx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:44100});}
+    catch(e){alert('AudioContext impossible: '+e.message);return;}
   }
-  if(audioCtx.state==='suspended'){try{await audioCtx.resume();}catch(e){}}
+  if(audioCtx.state==='suspended'){
+    try{await audioCtx.resume();D.log('resume: '+audioCtx.state,'ok');}
+    catch(e){D.log('resume failed','err');}
+  }
+  if(audioCtx.state!=='running'){
+    D.log('AudioCtx non running: '+audioCtx.state+' — tap écran','warn');
+  }
 
   let stream;
   try{
     stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1}});
     micStream=stream;
-    D.log(`Micro: ${stream.getAudioTracks()[0]?.label||'?'}`,'ok');
+    D.log(`Micro OK: ${stream.getAudioTracks()[0]?.label||'?'}`,'ok');
   }catch(e){
-    D.log(`Micro ÉCHEC: ${e.name}`,'err'); UI.showPermErr(`${e.name}: ${e.message}`); return;
+    D.log(`Micro ÉCHEC: ${e.name}`,'err');
+    document.getElementById('perr').textContent=`${e.name}: ${e.message}`;
+    _show('sp');return;
   }
 
-  // Graph: Mic → HPF 200Hz → Analyser → SilentGain → dest (Firefox fix)
   const src=audioCtx.createMediaStreamSource(stream);
-  const hpf=audioCtx.createBiquadFilter(); hpf.type='highpass'; hpf.frequency.value=200; hpf.Q.value=.7;
-  analyserNode=audioCtx.createAnalyser(); analyserNode.fftSize=CFG.FFT; analyserNode.smoothingTimeConstant=.18;
-  const sg=audioCtx.createGain(); sg.gain.value=0;
-  src.connect(hpf); hpf.connect(analyserNode); analyserNode.connect(sg); sg.connect(audioCtx.destination);
+  const hpf=audioCtx.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=200;hpf.Q.value=.7;
+  analyserNode=audioCtx.createAnalyser();analyserNode.fftSize=2048;analyserNode.smoothingTimeConstant=.10;
+  const sg=audioCtx.createGain();sg.gain.value=0;
+  src.connect(hpf);hpf.connect(analyserNode);analyserNode.connect(sg);sg.connect(audioCtx.destination);
 
   floatBuf=new Float32Array(analyserNode.fftSize);
   freqBuf=new Float32Array(analyserNode.frequencyBinCount);
 
-  Synth.init(audioCtx, selAmb);
+  Synth.init(audioCtx,selAmb);
   Umpire.setAmb(selAmb);
   Detector.reset();
   zeroCount=0;
 
-  Viz.init(document.getElementById('cc'), analyserNode);
-  UI.setAmbLbl(selAmb);
+  Viz.init(document.getElementById('cc'),analyserNode);
+  const ta=document.getElementById('tamb');if(ta)ta.textContent=AMB[selAmb]?.label||selAmb;
 
   if(CFG.SCORE_ON){
     document.getElementById('sbar')?.classList.add('vis');
     document.getElementById('sbtns')?.classList.add('vis');
     document.getElementById('rsolobtn')?.classList.add('hidden');
-    UI.updateScore();
-  } else {
+    _updateScore();
+  }else{
     document.getElementById('rsolobtn')?.classList.remove('hidden');
   }
-
-  UI.show('sm');
-  D.log('Session active','ok');
+  _show('sm');
 
   analysisTimer=setInterval(()=>{
-    if(!analyserNode) return;
+    if(!analyserNode)return;
     if(audioCtx.state==='suspended'){audioCtx.resume();return;}
     analyserNode.getFloatTimeDomainData(floatBuf);
     analyserNode.getFloatFrequencyData(freqBuf);
-    let rs=0; for(let i=0;i<floatBuf.length;i++) rs+=floatBuf[i]*floatBuf[i];
-    const rawRMS=Math.sqrt(rs/floatBuf.length);
-    if(rawRMS<.0001){zeroCount++;if(zeroCount===CFG.NOISE_WARN_FRAMES)D.log(`Signal nul (${audioCtx.state})`,'warn');}
-    else zeroCount=0;
-
     const now=Date.now();
     const res=Detector.process(floatBuf,freqBuf,now,audioCtx.sampleRate);
-    const col=UI.updateState(res.state,res.intensity,res);
+    const col=_updateUI(res);
     Viz.update(res.intensity,col);
-    if(res.event) _handleEv(res.event);
-  }, CFG.ANALYSIS_MS);
+    if(res.event)_handleEv(res.event);
+    // RMS meter
+    const mv=document.getElementById('mvol'),mvv=document.getElementById('mvv');
+    if(mv)mv.style.width=Math.min(100,(res.r/.3)*100)+'%';
+    if(mvv)mvv.textContent=isFinite(res.db)?res.db.toFixed(1)+'dB':'–∞';
+  },40);
 }
 
 function _handleEv(ev){
-  const type=ev.type;
-  UI.logEvent(type,ev.count);
-  D.log(`Ev: ${type} (${ev.count||0})`,'ok');
+  UI_logEvent(ev.type,ev.count);
+  D.log(`Ev: ${ev.type} (${ev.count||0})`,'ok');
   const a=AMB[selAmb];
-
-  switch(type){
+  switch(ev.type){
     case 'point_winner':
       Synth.react('point_winner');
-      setTimeout(()=>Umpire.announceEvent('fault'), a.delay*1.1+900);
-      break;
-    case 'point_epic':
-      Synth.react('point_epic'); break;
-    case 'point_clean':
-      Synth.react('point_clean'); break;
-    case 'point_error':
-      Synth.react('point_error');
-      setTimeout(()=>Umpire.announceEvent('fault'),380); break;
-    case 'rally_medium': Synth.react('rally_medium'); break;
-    case 'rally_long':   Synth.react('rally_long');   break;
-    case 'rally_epic':   Synth.react('rally_epic');   break;
-    case 'let':
-      Synth.react('let');
-      setTimeout(()=>Umpire.announceEvent('let'),450); break;
-    case 'voice_celeb':  Synth.react('voice_celeb'); break;
-    case 'voice_frust':  Synth.react('voice_frust'); break;
+      setTimeout(()=>Umpire.announceEvent('fault'),a.delay*1.1+900);break;
+    case 'point_epic':  Synth.react('point_epic');break;
+    case 'point_clean': Synth.react('point_clean');break;
+    case 'point_error': Synth.react('point_error');setTimeout(()=>Umpire.announceEvent('fault'),380);break;
+    case 'rally_medium':Synth.react('rally_medium');break;
+    case 'rally_long':  Synth.react('rally_long');break;
+    case 'rally_epic':  Synth.react('rally_epic');break;
+    case 'let':         Synth.react('let');setTimeout(()=>Umpire.announceEvent('let'),430);break;
+    case 'voice_celeb': Synth.react('voice_celeb');break;
+    case 'voice_frust': Synth.react('voice_frust');break;
   }
 }
 
 function stopSession(){
-  D.log('stopSession()','info');
-  clearInterval(analysisTimer); analysisTimer=null;
-  Synth.stop(); Viz.stop(); Detector.reset();
+  clearInterval(analysisTimer);analysisTimer=null;
+  Synth.stop();Viz.stop();Detector.reset();
   if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null;}
   if(audioCtx){audioCtx.close();audioCtx=null;}
   analyserNode=null;
   document.getElementById('sbar')?.classList.remove('vis');
   document.getElementById('sbtns')?.classList.remove('vis');
-  UI.show('si');
-  Score.reset();
+  _show('si');Score.reset();
+}
+
+/* ── UI helpers ── */
+const SCREENS=['sload','si','ssu','sp','sm'];
+function _show(n){SCREENS.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('hidden',id!==n);});}
+let logEntries=[];
+function UI_logEvent(type,count){
+  const now=new Date(),t=`${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+  const map={point_winner:{ev:'WINNER',d:'direct'},point_clean:{ev:'POINT',d:`${count||0} coups`},
+    rally_medium:{ev:'RALLYE',d:`${count||0} frappes`},rally_long:{ev:'LONG RALLYE',d:`${count||0} frappes`},
+    rally_epic:{ev:'ÉPIQUE !',d:`${count||0}+ frappes`},voice_celeb:{ev:'JOUEUR',d:'victoire'},
+    voice_frust:{ev:'JOUEUR',d:'frustration'},let:{ev:'LET',d:'filet'}};
+  const l=map[type]||{ev:type.toUpperCase(),d:''};
+  const e=document.createElement('div');e.className='le';
+  e.innerHTML=`<span class="lt">${t}</span><span class="lev">${l.ev}</span><span class="ld">${l.d}</span>`;
+  document.getElementById('elog')?.appendChild(e);
+  logEntries.push(e);if(logEntries.length>4)logEntries.shift().remove();
+}
+
+function _updateUI(res){
+  const def=STATES[res.state]||STATES.silence;
+  const sl=document.getElementById('stlbl'),ss=document.getElementById('stsub');
+  if(sl){sl.textContent=def.label;sl.style.color=def.color;}
+  if(ss)ss.textContent=def.sub;
+  const glows={silence:'transparent',murmur:'rgba(56,178,232,.07)',rally:'rgba(245,166,35,.10)',
+    tension:'rgba(245,166,35,.16)',react:'rgba(255,68,85,.16)',ovation:'rgba(200,245,58,.18)'};
+  const gw=document.getElementById('glow');
+  if(gw)gw.style.background=`radial-gradient(ellipse 60% 50% at 50% 60%, ${glows[res.state]||'transparent'} 0%, transparent 70%)`;
+  const rf=document.getElementById('rfi'),rp=document.getElementById('rpct');
+  if(rf){rf.style.strokeDashoffset=2*Math.PI*80-(res.intensity*2*Math.PI*80);rf.style.stroke=def.ring;}
+  if(rp){rp.textContent=Math.round(res.intensity*100);rp.style.color=def.color;}
+  if(res.state==='ovation'||res.state==='react')if(Math.random()<.25)_particle(def.color);
+  return def.ring;
+}
+
+function _particle(color){
+  const p=document.createElement('div');p.className='pt';
+  const x=20+Math.random()*60,y=40+Math.random()*50,sz=3+Math.random()*5,dur=.7+Math.random()*.7;
+  p.style.cssText=`left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;background:${color};animation-duration:${dur}s`;
+  document.getElementById('pw')?.appendChild(p);setTimeout(()=>p.remove(),dur*1000+100);
+}
+
+function _updateScore(){
+  if(!CFG.SCORE_ON)return;
+  const st=Score.getState(),ds=Score.getDS();
+  const $=id=>document.getElementById(id);
+  const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
+  set('sn1',st.p1);set('sn2',st.p2);
+  set('sp1p',ds.p1);set('sp2p',ds.p2);
+  set('sg1',st.games[0]);set('sg2',st.games[1]);
+  const d1=$('sd1'),d2=$('sd2');
+  if(d1)d1.classList.toggle('srv',st.serving===1);
+  if(d2)d2.classList.toggle('srv',st.serving===2);
+  // Sets
+  ['ss1','ss2'].forEach((id,pi)=>{
+    const el=$(id);if(!el)return;el.innerHTML='';
+    st.sets.forEach(s=>{const sp=document.createElement('span');sp.className='sset';
+      const my=pi===0?s.g1:s.g2,op=pi===0?s.g2:s.g1;
+      if(my>op)sp.classList.add('won');sp.textContent=String(my);el.appendChild(sp);});
+  });
+  set('ssetlbl',st.inTB?'TIE-BREAK':`SET ${st.set}`);
+  const b1=$('bp1'),b2=$('bp2');
+  if(b1)b1.textContent=`Point ${st.p1}`;if(b2)b2.textContent=`Point ${st.p2}`;
+}
+
+function _scorePoint(player){
+  if(!CFG.SCORE_ON)return;
+  const ev=Score.addPoint(player);if(!ev)return;
+  _updateScore();
+  if(ev.matchWon||ev.setWon){Synth.react('point_epic');setTimeout(()=>Umpire.announceScore(ev),2000);}
+  else if(ev.gameWon){Synth.react('point_winner');setTimeout(()=>Umpire.announceScore(ev),1400);}
+  else{Synth.react('point_clean');setTimeout(()=>Umpire.announceScore(ev),700);}
+  UI_logEvent('point_clean',0);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   DIAG
+   INIT — load YAMNet first, then show intro
    ══════════════════════════════════════════════════════════════════════ */
-function initDiag(){
-  D.set('dac',!!(window.AudioContext||window.webkitAudioContext)?'OK':'ABSENT',!!(window.AudioContext||window.webkitAudioContext)?'ok':'err');
-  D.set('dgum',!!(navigator.mediaDevices?.getUserMedia)?'OK':'ABSENT',!!(navigator.mediaDevices?.getUserMedia)?'ok':'err');
-  D.set('dtts',!!(typeof speechSynthesis!=='undefined')?'OK':'ABSENT',!!(typeof speechSynthesis!=='undefined')?'ok':'warn');
-  D.set('dsec2',window.isSecureContext?'OUI':'NON',window.isSecureContext?'ok':'err');
-}
-let dmicTmr=null;
-async function diagMic(){
-  D.log('Test micro…','info');
-  let tCtx,tStr;
-  try{
-    tCtx=new (window.AudioContext||window.webkitAudioContext)();
-    if(tCtx.state==='suspended') await tCtx.resume();
-    tStr=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-    D.log('getUserMedia OK','ok');
-  }catch(e){D.log(`Micro: ${e.message}`,'err');return;}
-  const an=tCtx.createAnalyser(); an.fftSize=1024;
-  const src=tCtx.createMediaStreamSource(tStr);
-  const sg=tCtx.createGain(); sg.gain.value=0; an.connect(sg); sg.connect(tCtx.destination); src.connect(an);
-  const buf=new Float32Array(an.fftSize); let fr=0,nn=0,pk=0;
-  D.log('3s — fais du bruit !','warn');
-  if(dmicTmr)clearInterval(dmicTmr);
-  dmicTmr=setInterval(()=>{
-    an.getFloatTimeDomainData(buf);
-    let s=0; for(let i=0;i<buf.length;i++) s+=buf[i]*buf[i];
-    const r=Math.sqrt(s/buf.length); pk=Math.max(pk,r); if(r>.0001)nn++; fr++;
-    const dmb=document.getElementById('dmbar');if(dmb)dmb.style.width=Math.min(100,(r/.18)*100)+'%';
-    const dr=document.getElementById('drms');if(dr){dr.textContent=r.toFixed(5);dr.className='dv '+(r>.001?'ok':r>.0001?'warn':'err');}
-    D.set('dfr',`${nn}/${fr}`);
-    if(fr>=75){clearInterval(dmicTmr);dmicTmr=null;
-      D.log(nn>10?`✓ Signal OK pk=${pk.toFixed(4)}`:`✗ Faible pk=${pk.toFixed(5)}`,(nn>10?'ok':'err'));
-      tStr.getTracks().forEach(t=>t.stop());try{tCtx.close();}catch(x){}
-    }
-  },40);
+async function init(){
+  _show('sload');
+
+  // Try to load YAMNet
+  const ok = await YAMNet.load((msg,pct)=>{
+    const lb=document.getElementById('lbar'),ls=document.getElementById('lstat');
+    if(lb)lb.style.width=pct+'%';
+    if(ls)ls.textContent=msg;
+  });
+
+  if(!ok){
+    document.getElementById('ldetail').textContent='Mode heuristique activé — fonctionne sans ML';
+  }
+
+  // Short pause then show intro
+  await new Promise(r=>setTimeout(r,600));
+  _show('si');
+  const bs=document.getElementById('bstart');
+  if(bs)bs.disabled=false;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   EVENTS
-   ══════════════════════════════════════════════════════════════════════ */
-// Ambiance
+/* ══ EVENTS ══════════════════════════════════════════════════════════ */
 document.querySelectorAll('.abtn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     document.querySelectorAll('.abtn').forEach(b=>{b.classList.remove('sel');b.setAttribute('aria-pressed','false');});
-    btn.classList.add('sel'); btn.setAttribute('aria-pressed','true');
+    btn.classList.add('sel');btn.setAttribute('aria-pressed','true');
     selAmb=btn.dataset.amb;
   });
 });
 
-// Score toggle
 document.getElementById('stoggle')?.addEventListener('change',e=>{CFG.SCORE_ON=e.target.checked;});
 
-// Start — pre-create AudioContext in gesture
 document.getElementById('bstart')?.addEventListener('click',async()=>{
-  D.log('START','info');
-  if(!audioCtx){
-    try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:44100}); }
-    catch(e){ D.log(`AudioCtx pré: ${e.message}`,'warn'); }
+  // CRITICAL: create AudioContext HERE, inside direct user gesture
+  try{
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:44100});
+    D.log('AudioCtx créé dans gesture: '+audioCtx.state,'ok');
+  }catch(e){D.log('AudioCtx err: '+e.message,'err');}
+  if(audioCtx?.state==='suspended'){
+    try{await audioCtx.resume();D.log('resumed: '+audioCtx.state,'ok');}catch(e){}
   }
-  if(audioCtx?.state==='suspended') try{await audioCtx.resume();}catch(e){}
-  if(CFG.SCORE_ON){ UI.show('ssu'); }
-  else { UI.show('sc'); Cal.start().catch(()=>startSession()); }
+  if(CFG.SCORE_ON)_show('ssu');
+  else startSession();
 });
 
-// Score setup
-document.getElementById('bsok')?.addEventListener('click',()=>{
+document.getElementById('bsok')?.addEventListener('click',async()=>{
   const n1=document.getElementById('p1n')?.value.trim()||'J1';
   const n2=document.getElementById('p2n')?.value.trim()||'J2';
-  Score.reset(n1,n2); UI.show('sc'); Cal.start().catch(()=>startSession());
+  Score.reset(n1,n2);
+  // Ensure AudioContext running (this is a user gesture)
+  if(audioCtx?.state==='suspended')try{await audioCtx.resume();}catch(e){}
+  startSession();
 });
-document.getElementById('bssk')?.addEventListener('click',()=>{
-  Score.reset('J1','J2'); UI.show('sc'); Cal.start().catch(()=>startSession());
+document.getElementById('bssk')?.addEventListener('click',async()=>{
+  Score.reset('J1','J2');
+  if(audioCtx?.state==='suspended')try{await audioCtx.resume();}catch(e){}
+  startSession();
 });
-
-// Cal
-document.getElementById('bcskip')?.addEventListener('click',()=>{Cal.stop();startSession();});
-document.getElementById('bcdone')?.addEventListener('click',()=>{Cal.stop();startSession();});
-
-// Stop / retry
 document.getElementById('bstop')?.addEventListener('click',stopSession);
-document.getElementById('bretry')?.addEventListener('click',()=>UI.show('si'));
-
-// Diag
-document.getElementById('bdiag')?.addEventListener('click',()=>{UI.show('sd');initDiag();});
-document.getElementById('btodiag')?.addEventListener('click',()=>{UI.show('sd');initDiag();});
-document.getElementById('dbback')?.addEventListener('click',()=>UI.show('si'));
-document.getElementById('dbmic')?.addEventListener('click',diagMic);
-document.getElementById('dbaudio')?.addEventListener('click',()=>{
-  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  Synth.testBeep(); D.log('Beep','ok');
-});
-document.getElementById('dbtts')?.addEventListener('click',()=>{Umpire.test();D.log('TTS test','ok');});
-document.getElementById('dblaunch')?.addEventListener('click',()=>{UI.show('si');setTimeout(startSession,100);});
-
-// Score point buttons
-function _scorePoint(player){
-  if(!CFG.SCORE_ON) return;
-  const ev=Score.addPoint(player);
-  if(!ev) return;
-  UI.updateScore();
-  // Crowd reaction immediately, umpire announces after with ducking
-  const isGame=ev.gameWon, isSet=ev.setWon, isMatch=ev.matchWon;
-  if(isMatch)      { Synth.react('point_epic');   setTimeout(()=>Umpire.announceScore(ev),2200); }
-  else if(isSet)   { Synth.react('point_epic');   setTimeout(()=>Umpire.announceScore(ev),1800); }
-  else if(isGame)  { Synth.react('point_winner'); setTimeout(()=>Umpire.announceScore(ev),1400); }
-  else             { Synth.react('point_clean');  setTimeout(()=>Umpire.announceScore(ev),700);  }
-  UI.logEvent('point_clean', 0);
-}
+document.getElementById('bretry')?.addEventListener('click',()=>_show('si'));
+['brs','brsa'].forEach(id=>document.getElementById(id)?.addEventListener('click',()=>Synth.react('random')));
+document.getElementById('bru')?.addEventListener('click',()=>Umpire.announceEvent('random'));
 document.getElementById('bp1')?.addEventListener('click',()=>_scorePoint(1));
 document.getElementById('bp2')?.addEventListener('click',()=>_scorePoint(2));
-
-// Random crowd
-['brs','brsa'].forEach(id=>{
-  document.getElementById(id)?.addEventListener('click',()=>{ Synth.react('random'); D.log('Réaction aléatoire','info'); });
+document.getElementById('stage')?.addEventListener('click',()=>{
+  if(audioCtx?.state==='suspended'){
+    audioCtx.resume().then(()=>D.log('AudioCtx resumed via tap','ok'));
+  }
 });
+// YAMNet badge tap = test beep
+document.getElementById('ybadge')?.addEventListener('click',(e)=>{
+  e.stopPropagation();
+  if(!audioCtx)return;
+  if(audioCtx.state==='suspended'){audioCtx.resume().then(()=>Synth.testBeep());return;}
+  Synth.testBeep();
+  D.log('Beep test','ok');
+});
+document.getElementById('sm')?.addEventListener('touchstart',()=>{if(audioCtx?.state==='suspended')audioCtx.resume();},{passive:true});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&audioCtx?.state==='suspended')audioCtx.resume();});
 
-// Random umpire
-document.getElementById('bru')?.addEventListener('click',()=>{ Umpire.announceEvent('random'); D.log('Arbitre aléatoire','info'); });
-
-// AudioContext resume (mobile)
-document.getElementById('stage')?.addEventListener('click',()=>{ if(audioCtx?.state==='suspended') audioCtx.resume(); });
-document.getElementById('sm')?.addEventListener('touchstart',()=>{ if(audioCtx?.state==='suspended') audioCtx.resume(); },{passive:true});
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&audioCtx?.state==='suspended') audioCtx.resume(); });
-
-// Init logs
-D.log(`Court Crowd v5 — ${navigator.userAgent.slice(0,48)}`,'ok');
-D.log(`Secure:${window.isSecureContext} ${location.protocol}`,(window.isSecureContext?'ok':'warn'));
+// Start
+init();
 </script>
 </body>
 </html>
